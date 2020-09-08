@@ -1,4 +1,4 @@
-function Cpi = Force_max_TOR(pz,vp,Mass, zcrit, vcrit)
+function Cpi = Force_max_TOR(pz,vp,Mass, zcrit, vcrit, prop)
 % Maximal force available at a contact point for the prediction of the ground reaction forces
 %   if the vertical position and the normal of the velocity of the point is
 %   lower than thresholds, the maximal force available is equal to 40% of
@@ -20,7 +20,7 @@ function Cpi = Force_max_TOR(pz,vp,Mass, zcrit, vcrit)
 % Georges Dumont
 %________________________________________________________
 
-prop=0.4;
+
 
 if pz<zcrit && abs(vp)<vcrit 
     Cpi=prop* Mass*9.81; 
