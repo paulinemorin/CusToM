@@ -30,6 +30,7 @@ function [ExternalForcesComputationResults] = ExternalForcesPrediction(filename,
 
 disp(['External Forces Prediction (' filename ') ...'])
 
+
 %% Loading data
 Human_model = BiomechanicalModel.OsteoArticularModel;
 load([filename '/InverseKinematicsResults.mat']); %#ok<LOAD>
