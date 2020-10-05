@@ -37,7 +37,11 @@ for i = 1:numel(AnalysisParameters.filename)
     elseif AnalysisParameters.ID.InputData == 1
         [ExternalForcesComputationResults] = AnalysisParameters.ExternalForces.Method(filename, BiomechanicalModel, AnalysisParameters); 
     elseif AnalysisParameters.ID.InputData == 2
-        [ExternalForcesComputationResults] = ExternalForcesPrediction(filename, AnalysisParameters, BiomechanicalModel, ModelParameters);
+        if AnalysisParameters.ID.AddMarkers == 0
+            [ExternalForcesComputationResults] = ExternalForcesPrediction(filename, AnalysisParameters, BiomechanicalModel, ModelParameters);
+        elseif AnalysisParameters.ID.AddMarkers == 1
+            [ExternalForcesComputationResults] = ExternalForcesPrediction_AddMarkers(filename, AnalysisParameters, BiomechanicalModel, ModelParameters);
+        end
     end
     save([filename '/ExternalForcesComputationResults'],'ExternalForcesComputationResults');
 end
