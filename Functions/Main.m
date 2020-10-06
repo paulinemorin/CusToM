@@ -22,7 +22,8 @@ load('ModelParameters.mat');
 load('AnalysisParameters.mat');
 
 if ~exist(fullfile(pwd,'BiomechanicalModel.mat'),'file')
-    CalibrateModelGeneration(ModelParameters,AnalysisParameters);
+%     CalibrateModelGeneration(ModelParameters,AnalysisParameters);
+    CalibrateModelGenerationNum(ModelParameters,AnalysisParameters);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -54,7 +55,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if AnalysisParameters.Muscles.Active
-    MuscleForcesComputation(AnalysisParameters);
+%     MuscleForcesComputation(AnalysisParameters);
+    MuscleForcesComputationNum(AnalysisParameters);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -69,9 +69,10 @@ end
 
 %% Inverse kinematics frame per frame
 
-options1 = optimoptions(@fmincon,'Display','off','TolFun',1e-3,'MaxFunEvals',20000,'GradObj','off','GradConstr','off');
+options1 = optimoptions(@fmincon,'Display','off','TolFun',1e-3,'MaxFunEvals',50000,'GradObj','off','GradConstr','off');
 
 q=zeros(nb_solid,nb_frame);
+ceq=zeros(9*nbClosedLoop,nb_frame);
 
 addpath('Symbolic_function')
 
@@ -186,8 +187,16 @@ end
 % Error computation
 KinematicsError=zeros(numel(list_markers),nb_frame);
 nb_cut=max([Human_model.KinematicsCut]);
-for f=1:nb_frame
-    [KinematicsError(:,f)] = ErrorMarkersIK(q(:,f),nb_cut,real_markers,f,list_markers,Rcut,pcut);
+if nbClosedLoop == 0
+    for f=1:nb_frame
+        [KinematicsError(:,f)] = ErrorMarkersIK(q(:,f),nb_cut,real_markers,f,list_markers,Rcut,pcut);
+    end
+else
+    nonlcon=@(qvar)NonLinCon_ClosedLoop(qvar,nb_cut,list_function,pcut,Rcut);
+    for f=1:nb_frame
+        [KinematicsError(:,f)] = ErrorMarkersIK(q(:,f),nb_cut,real_markers,f,list_markers,Rcut,pcut);
+        [~,ceq(:,f)]=nonlcon(q(:,f));
+    end
 end
 
 % Reaffect coordinates
@@ -219,6 +228,7 @@ ExperimentalData.Time = time;
 InverseKinematicResults.JointCoordinates = q;
 InverseKinematicResults.FreeJointCoordinates = q6dof;
 InverseKinematicResults.ReconstructionError = KinematicsError;
+InverseKinematicResults.NonLinearConstraint = ceq;
     
 disp(['... Inverse kinematics (' filename ') done'])
 
