@@ -129,5 +129,10 @@ if isfield(AnimateParameters,'Muscles') && ~isempty(AnimateParameters.Muscles)
     options.num_mus=num_mus';
 end
 
+if isfield(AnimateParameters,'Stiffness') 
+    options.Stiffness=AnimateParameters.Stiffness;
+else
+    options.Stiffness=[];
+end
 
 end

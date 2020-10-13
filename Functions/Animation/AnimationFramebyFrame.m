@@ -851,6 +851,31 @@ for f=f_affich
         animStruct.Set{f} = {animStruct.Set{f}{:},Fmu,Vmu,CEmu};
     end
     
+    
+    
+        if options.Stiffness && ~isempty(Muscles) && sum([Muscles.exist])
+            
+            
+            %% TO TEST
+                  CoM = CalcCoM(Human_model_bis);
+        X = CoM';
+        if f==f_affich(1) || (isfield(AnimateParameters,'Mode')  &&  isequal(AnimateParameters.Mode, 'Figure'))
+            hGmass=patch(ax,'Faces',1,'Vertices',X,'FaceColor','none','FaceVertexCData',[34,139,34]/255,'EdgeColor','none');
+            hGmass.Marker='o';
+            hGmass.MarkerFaceColor='flat';
+            hGmass.MarkerEdgeColor='k';
+            hGmass.MarkerSize=10;
+        end
+        animStruct.Handles{f}=[animStruct.Handles{f} hGmass];
+        animStruct.Props{f}={animStruct.Props{f}{:}, 'Vertices'};
+        animStruct.Set{f}={animStruct.Set{f}{:},X};
+            
+            
+            
+        end
+
+    
+    
     %% Vectors of external forces issued from experimental data
     if options.external_forces_anim
         extern_forces_f = Colors.external_forces(f).Visual;
