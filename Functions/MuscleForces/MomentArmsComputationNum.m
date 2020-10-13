@@ -21,9 +21,9 @@ function [R] = MomentArmsComputationNum(BiomechanicalModel,qval,dp)
 Human_model=BiomechanicalModel.OsteoArticularModel;
 Muscles=BiomechanicalModel.Muscles;
 % nq=numel(qval);
-C=BiomechanicalModel.Coupling;
 idxm=find([Muscles.exist]);
 nmr=numel(idxm);
+
 
 %
 if length(qval)==numel(BiomechanicalModel.OsteoArticularModel(:)) && ~isempty(intersect({BiomechanicalModel.OsteoArticularModel.name},'root0'))  
@@ -31,6 +31,14 @@ if length(qval)==numel(BiomechanicalModel.OsteoArticularModel(:)) && ~isempty(in
 else
     q=qval;
 end
+
+if isfield('Coupling', BiomechanicalModel)
+    C=BiomechanicalModel.Coupling;
+else 
+    C = ones(nmr,length(q));
+end
+
+
 %% Computation of moment arms
 R=zeros(nmr,length(q));%init R
 

@@ -65,12 +65,12 @@ end
 
 dt=1/freq;
 dq=derivee2(dt,q);  % vitesses
-ddq=derivee2(dt,dq);  % accélérations
+ddq=derivee2(dt,dq);  % accï¿½lï¿½rations
 
 nbframe=size(q,1);
 
-%% Définition des données cinématiques du pelvis
-% (position / vitesse / accélération / orientation / vitesse angulaire / accélération angulaire)
+%% Dï¿½finition des donnï¿½es cinï¿½matiques du pelvis
+% (position / vitesse / accï¿½lï¿½ration / orientation / vitesse angulaire / accï¿½lï¿½ration angulaire)
 % Kinematical data for Pelvis (Position/speed/acceleration/angles/angular speed/angular acceleration)
 
 if isfield(InverseKinematicsResults,'FreeJointCoordinates')
@@ -111,7 +111,7 @@ dv0=derivee2(dt,v0);
 % dw
 dw=derivee2(dt,w);
 
-%% Initialisations des différents efforts et leur stockage
+%% Initialisations des diffï¿½rents efforts et leur stockage
 for f=1:nbframe
     for n=1:numel(Human_model)
         external_forces_pred(f).fext(n).fext=zeros(3,2); %#ok<AGROW>
@@ -134,19 +134,19 @@ t6dof0=zeros(3,nbframe);
 t6dof=t6dof0;
 FContactDyn=struct('F',[],'T',[]);
 
-%% Paramètres de l'optimisation fmincon pour probleme lineaire
+%% Paramï¿½tres de l'optimisation fmincon pour probleme lineaire
 X0= 1*zeros(3*NbPointsPrediction,1);
 lb=-ones(3*NbPointsPrediction,1);
 lb(2*NbPointsPrediction+1:3*NbPointsPrediction)=0;
 ub=ones(3*NbPointsPrediction,1);
 lb_init=lb; ub_init=ub;
 
-options = optimoptions(@fmincon,'Algorithm','sqp','Display','off','GradObj','off','GradConstr','off','TolFun',1e-6,'TolX',1e-6);
+options = optimoptions(@fmincon,'Algorithm','sqp','Display','final','GradObj','off','GradConstr','off','TolFun',1e-6,'TolX',1e-6);
 
 %% Calcul frame par frame
 h = waitbar(0,['External Forces Prediction (' filename ')']);
 for i=1:nbframe
-    %attribution à chaque articulation de la position/vitesse/accélération (position/speed/acceleration for each joint)
+    %attribution ï¿½ chaque articulation de la position/vitesse/accï¿½lï¿½ration (position/speed/acceleration for each joint)
     Human_model(1).p=p_pelvis(i,:)';
     Human_model(1).R=r_pelvis{i};
     Human_model(1).v0=v0(i,:)';
@@ -158,14 +158,14 @@ for i=1:nbframe
         Human_model(j).dq=dq(i,j);
         Human_model(j).ddq=ddq(i,j);
     end
-    % Calcul positions / vitesses / accélération de chaque solide (computation of position/speed/acceleration for each solid)
+    % Calcul positions / vitesses / accï¿½lï¿½ration de chaque solide (computation of position/speed/acceleration for each solid)
     [Human_model,Prediction] = ForwardAllKinematicsPrediction(Human_model,Prediction,1); 
     %% Calcul des efforts maximaux disponibles (computation of maximum available effort)
     for pred = 1:numel(Prediction)
         Prediction(pred).px(i)=Prediction(pred).pos_anim(1);
         Prediction(pred).py(i)=Prediction(pred).pos_anim(2);
         Prediction(pred).pz(i)=Prediction(pred).pos_anim(3);
-        Prediction(pred).vitesse_temps(i)=sqrt(Prediction(pred).vitesse(1,:)^2+Prediction(pred).vitesse(2,:)^2+Prediction(pred).vitesse(3,:)^2); % Recuperation de la norme de la vitesse (repère monde)
+        Prediction(pred).vitesse_temps(i)=sqrt(Prediction(pred).vitesse(1,:)^2+Prediction(pred).vitesse(2,:)^2+Prediction(pred).vitesse(3,:)^2); % Recuperation de la norme de la vitesse (repï¿½re monde)
             Cpi = Force_max_TOR(Prediction(pred).pz(i),Prediction(pred).vitesse_temps(i),ModelParameters.Mass, AnalysisParameters.Prediction.PositionThreshold  , AnalysisParameters.Prediction.VelocityThreshold);
             Fx(pred,i)=Cpi;
             Fy(pred,i)=Cpi;
@@ -194,8 +194,8 @@ for i=1:nbframe
         % calcul des moments
         A(4,k+numel(Prediction))=-(Prediction(k).pz(i)-p_pelvis(i,3))*Prediction(k).efforts_max(i,2); %-pz*beta
         A(4,k+2*numel(Prediction))=(Prediction(k).py(i)-p_pelvis(i,2))*Prediction(k).efforts_max(i,3); %py*gamma
-        A(5,k)=(Prediction(k).pz(i)-p_pelvis(i,3))*Prediction(k).efforts_max(i,1); %pz*alpha
-        A(5,k+2*numel(Prediction))=-(Prediction(k).px(i)-p_pelvis(i,1))*Prediction(k).efforts_max(i,3); %-px*gamma
+        A(5,k)= (Prediction(k).pz(i)-p_pelvis(i,3))*Prediction(k).efforts_max(i,1); %pz*alpha
+        A(5,k+2*numel(Prediction))= -(Prediction(k).px(i)-p_pelvis(i,1))*Prediction(k).efforts_max(i,3); %-px*gamma
         A(6,k)=-(Prediction(k).py(i)-p_pelvis(i,2))*Prediction(k).efforts_max(i,1); %-py*alpha
         A(6,k+numel(Prediction))=(Prediction(k).px(i)-p_pelvis(i,1))*Prediction(k).efforts_max(i,2); %px*beta
     end
@@ -219,15 +219,24 @@ for i=1:nbframe
     end
     
     %% Minimizing sum of normalized efforts for each punctual joint while respecting dynamical equations and friction
-    X = fmincon(@(X) MinimizationCost(X, Human_model, Prediction, i, external_forces_pred, f6dof, t6dof0, Fmax, g),X0,Afric,bfric,A,b,lb,ub,[],options);
+    Biomtemp=BiomechanicalModel;
+    Biomtemp.OsteoArticularModel =Human_model;
+    Aopti=A;
+    bopti=b;
+    Aopti(4:6,:)=0;
+    bopti(4:6)=0;
+    
+    [X,~,~,output] = fmincon(@(X) MinimizationCost(X, Biomtemp, Prediction, i, external_forces_pred, f6dof, t6dof0, Fmax, g),X0,[],[],Aopti,bopti,lb,ub,[],options);
+%    [X,~,~,output] = fmincon(@(X) MinimizationCost(X, Biomtemp, Prediction, i, external_forces_pred, f6dof, t6dof0, Fmax, g),X0,[],[],A,b,lb,ub,[],options);
+%    X = fmincon(@(X) MinimizationCost(X, Biomtemp, Prediction, i, external_forces_pred, f6dof, t6dof0, Fmax, g),X0,Afric,bfric,A,b,lb,ub,[],options);
     
     %% Optimisation de la prochaine minimisation
-    lb=max(X-0.45,lb_init); %expérimentalement, les bornes ne varient pas de plus ou moins 0.45 (experimentaly, boundaries vary not more than 0.45)
+    lb=max(X-0.45,lb_init); %expï¿½rimentalement, les bornes ne varient pas de plus ou moins 0.45 (experimentaly, boundaries vary not more than 0.45)
     ub=min(X+0.45,ub_init);
 
-    X0=X; %d'une frame à l'autre, on change très peu de position, donc de valeur d'effort (
+    X0=X; %d'une frame ï¿½ l'autre, on change trï¿½s peu de position, donc de valeur d'effort (
     
-    %% Récupération des forces finales, stockées d'abord dans Prediction (Final forces storage without prediction)
+    %% Rï¿½cupï¿½ration des forces finales, stockï¿½es d'abord dans Prediction (Final forces storage without prediction)
     for k = 1:numel(Prediction)
         Prediction(k).efforts(i,1)=X(k)*Prediction(k).efforts_max(i,1);
         Prediction(k).efforts(i,2)=X(k+numel(Prediction))*Prediction(k).efforts_max(i,2);
@@ -241,7 +250,7 @@ for i=1:nbframe
 %         FContactDyn(j).F(:,i) = Human_model(j).f; FContactDyn(j).T(:,i) = Human_model(j).t;
 %     end
     
-    %% Calcul des efforts extérieurs tels qu’utilisés par la suite pour la dynamique
+    %% Calcul des efforts extï¿½rieurs tels quï¿½utilisï¿½s par la suite pour la dynamique
     %% Computation of external forces for use with dynamics
     external_forces_pred=addForces_Prediction_frame_par_frame(X,external_forces_pred,Prediction,Fmax,i);
     
@@ -251,7 +260,7 @@ end
 close(h)
 disp(['... External Forces Prediction (' filename ') done'])
 
-%% Filtrage des données
+%% Filtrage des donnï¿½es
 
 if AnalysisParameters.Prediction.FilterActive
     f_cut = AnalysisParameters.Prediction.FilterCutOff;
@@ -273,7 +282,7 @@ if AnalysisParameters.Prediction.FilterActive
     PredictionFiltMx = filt_data(PredictionMx,f_cut,freq);
     PredictionFiltMy = filt_data(PredictionMy,f_cut,freq);
     PredictionFiltMz = filt_data(PredictionMz,f_cut,freq);
-    % Remise sous la forme d'une structure (utilisée pour la dynamique inverse) (definition of a structure used for inverse dynamics)
+    % Remise sous la forme d'une structure (utilisï¿½e pour la dynamique inverse) (definition of a structure used for inverse dynamics)
     for i=1:numel(external_forces_pred)
         for j=1:numel(external_forces_pred(i).fext)
             external_forces_pred(i).fext(j).fext(1,1)=PredictionFiltFx(i,j);
@@ -344,7 +353,7 @@ else
     end
 end
 
-%% Sauvegarde des données (data saving)
+%% Sauvegarde des donnï¿½es (data saving)
 
 if exist([filename '/ExternalForcesComputationResults.mat'],'file')
     load([filename '/ExternalForcesComputationResults.mat']); %#ok<LOAD>
