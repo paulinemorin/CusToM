@@ -132,7 +132,7 @@ end
 if isfield(AnimateParameters,'Stiffness') 
     options.Stiffness=AnimateParameters.Stiffness;
 else
-    options.Stiffness=[];
+    options.Stiffness=0;
 end
 
 end

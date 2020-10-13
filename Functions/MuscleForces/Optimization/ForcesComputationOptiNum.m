@@ -161,6 +161,19 @@ else
         waitbar(i/Nb_frames)
     end
     
+    
+    % Determiner les chaînes musculaires + solide d'intérêt
+    % Chaînes hand -> thorax et pied -> pelvis 
+    
+    
+    % Calculer la raideur
+    % Stocker les infos dans MuscleForcesComputationResults
+    
+    
+    
+    
+    
+    
     % Static optimization results
     MuscleForcesComputationResults.MuscleActivations(idm,:) = Aopt;
     MuscleForcesComputationResults.MuscleForces(idm,:) = Fopt;

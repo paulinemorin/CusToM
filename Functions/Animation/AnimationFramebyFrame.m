@@ -863,7 +863,7 @@ for f=f_affich
             Y_array = [0; V(2,i_for)*D(i_for,i_for)];
             Z_array = [0; V(3,i_for)*D(i_for,i_for)];
             F_ef = [F_ef; [1 2]+size(V_ef,1)]; %#ok<AGROW>
-            V_ef = [V_ef; [X_array' Y_array' Z_array']]; %#ok<AGROW>
+            V_ef = [V_ef; [X_array Y_array Z_array]]; %#ok<AGROW>
         end
         if isfield(AnimateParameters,'Mode')  && (isequal(AnimateParameters.Mode, 'Figure') ...
                 || isequal(AnimateParameters.Mode, 'GenerateParameters') ...
