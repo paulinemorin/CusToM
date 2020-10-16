@@ -73,16 +73,14 @@ acq = btkReadAcquisition(filename1);
 markers = btkGetMarkers(acq);
 markers_list = fieldnames(markers);
 nbr_markers = length(markers_list);
-[real_markers, nbframe, ~, ~, fcapture]=C3dProcessedData(filename, markers_list);
+[real_markers, nbframe]=C3dProcessedData(filename, markers_list);
 real_markers = rmfield(real_markers,'time');
-Ts=1/fcapture;
-Temps = (1:nbframe)*Ts;
 
 % Filtrage (Filtering)
 f_cut = AnalysisParameters.Prediction.FilterCutOff;
 if AnalysisParameters.General.FilterActive
     for i=1:numel(real_markers)
-    	real_markers(i).position = filt_data(real_markers(i).position_c3d,f_cut,fcapture);
+    	real_markers(i).position = filt_data(real_markers(i).position_c3d,f_cut,freq);
     end
 else
     for i=1:numel(real_markers)
@@ -227,7 +225,7 @@ for i=1:nbframe
     end
     good_marker1(i,:)=[proches_marker(no_min_x,:) proches_marker(no_max_x,:)]; %Surface de contact définie par les deux marqueurs extrêmes précédents
     if i~=1
-        vitesse_good_marker(i,:)=(real_markers(num_good_marker).position(i,1:3)-real_markers(num_good_marker).position(i-1,1:3))/Ts;
+        vitesse_good_marker(i,:)=(real_markers(num_good_marker).position(i,1:3)-real_markers(num_good_marker).position(i-1,1:3))/(1/freq);
     end
     X2(i,:)=good_marker1(i,4:6)-good_marker1(i,1:3); %Axe X2 orienté par les deux marqueurs aux extremités de la surface de contact considérée
     X2(i,:)=X2(i,:)/sqrt(X2(i,1)^2+X2(i,2)^2+X2(i,3)^2); %Axe X2 normé
@@ -316,7 +314,8 @@ for i=1:nbframe
     good_X = [good_marker1(i,1)-real_markers(1).position(i,1) good_marker1(i,4)-real_markers(1).position(i,1)]; 
     Coord = num2cell(good_X);
     [external_forces_pred(i).CoordX_Markers] = Coord; % Abscisses des marqueurs en contact par rapport au marqueur origine de la structure
-    [external_forces_pred(i).p] = Human_model(j).p;
+    [external_forces_pred(i).p1] = Human_model(22).p;
+    [external_forces_pred(i).p2] = Human_model(28).p;
      
     waitbar(i/nbframe)
 end
@@ -362,57 +361,17 @@ end
 if ~any(strcmp('Visual',fieldnames(external_forces_pred)))
     external_forces_pred(1).Visual=[];
 end
-if ~isequal(AnalysisParameters.General.InputData, @MVNX_V3)
-    for f=1:numel(external_forces_pred) % for every frame
-%         % One global force
-%             T = zeros(3,2);
-%             for i=unique([Prediction.num_solid]) % for every solid
-%                 T = T + external_forces_pred(f).fext(i).fext;
-%             end
-%             % CoP position
-%             CoP = cross(T(:,1),T(:,2))/(norm(T(:,1))^2);
-%             CoP = CoP - (CoP(3)/T(3,1))*T(:,1); % point on z=0
-%             % external_forces structure
-%             external_forces_pred(f).Visual = [external_forces_pred(f).Visual [CoP;T(:,1)]];
+
+for f=1:numel(external_forces_pred) % for every frame
         % One force for each solid
-            for i=unique([Prediction.num_solid]) % for every solid
+        for i=unique([Prediction.num_solid]) % for every solid
                 T = external_forces_pred(f).fext(i).fext;
                 % CoP position
                 CoP = cross(T(:,1),T(:,2))/(norm(T(:,1))^2);
-                CoP = CoP - (CoP(3)/T(3,1))*T(:,1); % point on z=0
+                %CoP = CoP - (CoP(3)/T(3,1))*T(:,1); % point on z=0
                 % external_forces structure
                 external_forces_pred(f).Visual = [external_forces_pred(f).Visual [CoP;T(:,1)]];
-            end
-    end
-else
-    for f=1:numel(external_forces_pred) % for every frame
-    % One force for each solid
-        for i=unique([Prediction.num_solid]) % for every solid
-            T = external_forces_pred(f).fext(i).fext;
-            % CoP position
-            CoP = cross(T(:,1),T(:,2))/(norm(T(:,1))^2);
-            CoP = CoP - (CoP(3)/T(3,1))*T(:,1); % point on z=0
-            % external_forces structure
-            external_forces_pred(f).Visual = [external_forces_pred(f).Visual [CoP;T(:,1)]];
         end
-%     % One force for each foot
-%         % Right foot (solids 52 and 55)
-%             T = external_forces_pred(f).fext(52).fext + external_forces_pred(f).fext(55).fext;
-%             CoP = cross(T(:,1),T(:,2))/(norm(T(:,1))^2);
-%             CoP = CoP - (CoP(3)/T(3,1))*T(:,1); 
-%             external_forces_pred(f).Visual = [external_forces_pred(f).Visual [CoP;T(:,1)]];
-%         % Left foot (solids 64 and 67)
-%             T = external_forces_pred(f).fext(64).fext + external_forces_pred(f).fext(67).fext;
-%             CoP = cross(T(:,1),T(:,2))/(norm(T(:,1))^2);
-%             CoP = CoP - (CoP(3)/T(3,1))*T(:,1); 
-%             external_forces_pred(f).Visual = [external_forces_pred(f).Visual [CoP;T(:,1)]];
-%     % One global force
-%             T = external_forces_pred(f).fext(52).fext + external_forces_pred(f).fext(55).fext + ...
-%                 external_forces_pred(f).fext(64).fext + external_forces_pred(f).fext(67).fext;
-%             CoP = cross(T(:,1),T(:,2))/(norm(T(:,1))^2);
-%             CoP = CoP - (CoP(3)/T(3,1))*T(:,1); 
-%             external_forces_pred(f).Visual = [external_forces_pred(f).Visual [CoP;T(:,1)]];
-    end
 end
 
 %% Sauvegarde des données (data saving)
