@@ -78,7 +78,11 @@ Amax = ones(Nb_muscles,1);
 Fopt = zeros(Nb_muscles,Nb_frames);
 Aopt = zeros(size(Fopt));
 % Muscle Forces Matrices computation
-[Fa,Fp]=AnalysisParameters.Muscles.MuscleModel(Lm,Vm,Fmax);
+if isfield(AnalysisParameters.Muscles,'MuscleModel')
+    [Fa,Fp]=AnalysisParameters.Muscles.MuscleModel(Lm,Vm,Fmax);
+else
+    [Fa,Fp]=SimpleMuscleModel(Lm,Vm,Fmax);
+end
 % Solver parameters
 options1 = optimoptions(@fmincon,'Algorithm','sqp','Display','final','GradObj','off','GradConstr','off','TolFun',1e-6,'MaxIterations',100000,'MaxFunEvals',100000);
 options2 = optimoptions(@fmincon,'Algorithm','sqp','Display','final','GradObj','off','GradConstr','off','TolFun',1e-6,'MaxIterations',1000,'MaxFunEvals',2000000);
@@ -161,16 +165,29 @@ else
         waitbar(i/Nb_frames)
     end
     
-    
+    effector = [22 3]; %Choice of the effector : Solid RFOOT (22) and marker anat_position RTOE (3)
     % Determiner les chaînes musculaires + solide d'intérêt
+    
     % Chaînes hand -> thorax et pied -> pelvis 
+    if effector(1) == 35 %RHand (35)
+        SolidConcerned = find_solid_path(BiomechanicalModel.OsteoArticularModel,35,7); %list of solids between RHand (35) and Thorax (7)
+    elseif effector(1) == 22 %RFoot (22)
+        SolidConcerned = find_solid_path(BiomechanicalModel.OsteoArticularModel,22,1); %list of solids between RFoot (22) and PelvisSacrum (1)
+    end
+    MuscleConcerned = []; %construction of MuscleConcerned
+    for i=1:82 
+        if isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(1),SolidConcerned)) && isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(end),SolidConcerned)) %v�rifying that the first 
+    %and last solids connected to the muscle belong to SolidConcerned
+        MuscleConcerned = [MuscleConcerned i];%A FINIR
+        end
+    end
+    FMT = MuscleForcesComputationResults;
+    FMT = MuscleForcesComputationResults.MuscleForces(:,1); 
+    Fext = ExternalForcesComputationResults.ExternalForcesExperiments(1).fext(22);
+    Fext = Fext.fext(1:3,1); %external forces applied to the RFOOt at first frame
     
-    
-    % Calculer la raideur
-    % Stocker les infos dans MuscleForcesComputationResults
-    
-    
-    
+    MuscleForcesComputationResults.TaskStiffness = TaskStiffness(BiomechanicalModel,MuscleConcerned,SolidConcerned,q,Fext,FMT,effector);
+
     
     
     
