@@ -1,4 +1,4 @@
-function cost = MinimizationCost(X, BiomechanicalModel, Prediction, i,  external_forces_pred, f6dof, t6dof0,  Fmax, g, Nb_muscles , alpha_beta_gamma)
+function cost = MinimizationCost(X, BiomechanicalModel, Prediction, i,  external_forces_pred, Fmax, g, Nb_muscles , alpha_beta_gamma)
 alpha = alpha_beta_gamma(1);
 beta =  alpha_beta_gamma(2);
 gamma =  alpha_beta_gamma(3);
@@ -17,7 +17,7 @@ if beta
     
     external_forces_pred=addForces_Prediction_frame_par_frame(X,external_forces_pred,Prediction,Fmax,i);
     
-    [Human_model,f6dof(:,i),t6dof0(:,i)]=InverseDynamicsSolid(Human_model,external_forces_pred(i).fext,g,1);
+    [Human_model,~,~]=InverseDynamicsSolid(Human_model,external_forces_pred(i).fext,g,1);
     
     cost = alpha * sum(X(1:Pred_length).^2) + beta * sum([Human_model.torques].^2) + gamma * sum(X(1+Pred_length:Nb_muscles).^2); 
     

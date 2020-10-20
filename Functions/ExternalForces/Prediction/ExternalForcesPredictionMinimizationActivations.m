@@ -240,8 +240,8 @@ for i=1:nbframe
     
     BiomechanicalModel.OsteoArticularModel = Human_model;
     
-    alpha_beta_gamma= [1 1 0];
-    cost_func = @(X) MinimizationCost(X, BiomechanicalModel, Prediction, i,  external_forces_pred, f6dof, t6dof0,  Fmax, g, Nb_muscles ,  alpha_beta_gamma);
+    alpha_beta_gamma = [1 0 0];
+    cost_func = @(X) MinimizationCost(X, BiomechanicalModel, Prediction, i,  external_forces_pred,  Fmax, g, Nb_muscles ,  alpha_beta_gamma);
     
     if alpha_beta_gamma(3)~=0
         R   =   MomentArmsComputationNum(BiomechanicalModel,q(i,:),0.0001);
