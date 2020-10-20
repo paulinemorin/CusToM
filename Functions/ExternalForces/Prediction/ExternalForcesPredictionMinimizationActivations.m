@@ -135,9 +135,13 @@ t6dof=t6dof0;
 FContactDyn=struct('F',[],'T',[]);
 
 %% Param�tres de l'optimisation fmincon pour probleme lineaire
-Muscles = BiomechanicalModel.Muscles;
-idm = logical([Muscles.exist]);
-Nb_muscles=numel(Muscles(idm));
+if ~isempty(BiomechanicalModel.Muscles)
+    Muscles = BiomechanicalModel.Muscles;
+    idm = logical([Muscles.exist]);
+    Nb_muscles=numel(Muscles(idm));
+else
+    Nb_muscles=0;
+end
 
 
 X0= [1*zeros(3*NbPointsPrediction,1) ; zeros(Nb_muscles,1)] ;
@@ -232,33 +236,37 @@ for i=1:nbframe
     Aopti(4:6,:)=0;
     bopti(4:6)=0;
     
-    R   =   MomentArmsComputationNum(BiomechanicalModel,q(i,:),0.0001);
     
-    if isfield(BiomechanicalModel.OsteoArticularModel,'ClosedLoop') && ~isempty([BiomechanicalModel.OsteoArticularModel.ClosedLoop])
-        k=BiomechanicalModel.GeometricalCalibration.k_calib;
-        
-        [solid_path1,solid_path2,num_solid,num_markers]=Data_ClosedLoop(BiomechanicalModel.OsteoArticularModel);
-        
-        dependancies=KinematicDependancy(Human_model);
-        % Closed-loop constraints
-        KT=ConstraintsJacobian(BiomechanicalModel,q(i,:),solid_path1,solid_path2,num_solid,num_markers,k,0.0001,dependancies)';
-        GT = null(KT')';
-    else
-        GT=eye(length(q(i,:)));
-    end
     
     BiomechanicalModel.OsteoArticularModel = Human_model;
-    Fmmax = [BiomechanicalModel.Muscles.f0]  ;
-    alpha_beta_gamma= [1 0 0];
-    nonlcon = @(X) Prediction_activation_dependancy(X, Human_model, Prediction, i,  external_forces_pred,  Fmax, g, R, GT, Fmmax);
+    
+    alpha_beta_gamma= [1 1 0];
     cost_func = @(X) MinimizationCost(X, BiomechanicalModel, Prediction, i,  external_forces_pred, f6dof, t6dof0,  Fmax, g, Nb_muscles ,  alpha_beta_gamma);
     
-    if alpha_beta_gamma(3)~=0 
+    if alpha_beta_gamma(3)~=0
+        R   =   MomentArmsComputationNum(BiomechanicalModel,q(i,:),0.0001);
+        
+        if isfield(BiomechanicalModel.OsteoArticularModel,'ClosedLoop') && ~isempty([BiomechanicalModel.OsteoArticularModel.ClosedLoop])
+            k=BiomechanicalModel.GeometricalCalibration.k_calib;
+            
+            [solid_path1,solid_path2,num_solid,num_markers]=Data_ClosedLoop(BiomechanicalModel.OsteoArticularModel);
+            
+            dependancies=KinematicDependancy(Human_model);
+            % Closed-loop constraints
+            KT=ConstraintsJacobian(BiomechanicalModel,q(i,:),solid_path1,solid_path2,num_solid,num_markers,k,0.0001,dependancies)';
+            GT = null(KT')';
+        else
+            GT=eye(length(q(i,:)));
+        end
+        Fmmax = [BiomechanicalModel.Muscles.f0]  ;
+        
+        
+        nonlcon = @(X) Prediction_activation_dependancy(X, Human_model, Prediction, i,  external_forces_pred,  Fmax, g, R, GT, Fmmax);
         [X,~,exitflag,output] = fmincon(cost_func,X0,[],[],Aopti,bopti,lb,ub,nonlcon,options);
     else
         [X,~,exitflag,output] = fmincon(cost_func,X0,[],[],Aopti,bopti,lb,ub,[],options);
     end
-
+    
     if exitflag==-2
         non_conv=[non_conv i];
     end
