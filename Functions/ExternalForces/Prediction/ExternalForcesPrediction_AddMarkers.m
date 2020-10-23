@@ -67,9 +67,7 @@ dq=derivee2(dt,q);  % vitesses
 ddq=derivee2(dt,dq);  % accélérations
 
 %% Loading structure data
-filename_ref = 'statique_vide';
-filename1=[filename_ref '.c3d'];
-acq = btkReadAcquisition(filename1);
+acq = btkReadAcquisition(AnalysisParameters.Prediction.ReferenceFile);
 markers = btkGetMarkers(acq);
 markers_list = fieldnames(markers);
 nbr_markers = length(markers_list);
