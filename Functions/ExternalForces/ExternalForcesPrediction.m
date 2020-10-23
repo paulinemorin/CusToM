@@ -296,7 +296,7 @@ if ~isequal(AnalysisParameters.General.InputData, @MVNX_V3)
                 T = external_forces_pred(f).fext(i).fext;
                 % CoP position
                 CoP = cross(T(:,1),T(:,2))/(norm(T(:,1))^2);
-                CoP = CoP - (CoP(3)/T(3,1))*T(:,1); % point on z=0
+                %CoP = CoP - (CoP(3)/T(3,1))*T(:,1); % point on z=0
                 % external_forces structure
                 external_forces_pred(f).Visual = [external_forces_pred(f).Visual [CoP;T(:,1)]];
             end
@@ -308,7 +308,7 @@ else
             T = external_forces_pred(f).fext(i).fext;
             % CoP position
             CoP = cross(T(:,1),T(:,2))/(norm(T(:,1))^2);
-            CoP = CoP - (CoP(3)/T(3,1))*T(:,1); % point on z=0
+            %CoP = CoP - (CoP(3)/T(3,1))*T(:,1); % point on z=0
             % external_forces structure
             external_forces_pred(f).Visual = [external_forces_pred(f).Visual [CoP;T(:,1)]];
         end

@@ -146,7 +146,7 @@ Fy=zeros(NbPointsPrediction,nbframe);
 Fz=zeros(NbPointsPrediction,nbframe);
 
 %% Paramètres de l'optimisation fmincon pour probleme lineaire
-X0= 1*zeros(3*NbPointsPrediction,1);
+X0= zeros(3*NbPointsPrediction,1);
 lb=-ones(3*NbPointsPrediction,1);
 lb(2*NbPointsPrediction+1:3*NbPointsPrediction)=0;
 ub=ones(3*NbPointsPrediction,1);
@@ -290,7 +290,7 @@ for i=1:nbframe
     end
     
     %% Minimizing sum of normalized efforts for each punctual joint while respecting dynamical equations and friction
-    X = fmincon(@(X) sum(X.^2),X0,Afric,bfric,A,b,lb,ub,[],options);
+    X  = fmincon(@(X) sum(X.^2),X0,Afric,bfric,A,b,lb,ub,[],options);
     
     %% Optimisation de la prochaine minimisation
     lb=max(X-0.45,lb_init); %expérimentalement, les bornes ne varient pas de plus ou moins 0.45 (experimentaly, boundaries vary not more than 0.45)
@@ -365,12 +365,18 @@ end
 for f=1:numel(external_forces_pred) % for every frame
         % One force for each solid
         for i=unique([Prediction.num_solid]) % for every solid
-                T = external_forces_pred(f).fext(i).fext;
-                % CoP position
-                CoP = cross(T(:,1),T(:,2))/(norm(T(:,1))^2);
-                %CoP = CoP - (CoP(3)/T(3,1))*T(:,1); % point on z=0
-                % external_forces structure
-                external_forces_pred(f).Visual = [external_forces_pred(f).Visual [CoP;T(:,1)]];
+            pz_pieds = 0;
+            for j = 1:length(Prediction)
+                pz_pieds = pz_pieds + Prediction(j).pz(f);
+            end
+            pz_pieds = pz_pieds/length(Prediction);
+            T = external_forces_pred(f).fext(i).fext;
+            % CoP position
+            %pz_pieds = reshape([Prediction.pz], [numel([Prediction.pz])/length(Prediction) length(Prediction)]);
+            CoP = cross(T(:,1),T(:,2))/(norm(T(:,1))^2);
+            CoP = CoP - ((CoP(3)-pz_pieds)/T(3,1))*T(:,1); % point au niveau des pieds
+            % external_forces structure
+            external_forces_pred(f).Visual = [external_forces_pred(f).Visual [CoP;T(:,1)]];
         end
 end
 
