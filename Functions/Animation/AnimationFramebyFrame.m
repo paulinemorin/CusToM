@@ -854,32 +854,41 @@ for f=f_affich
     
     
     %% Vectors of external forces issued from experimental data
-    if options.Stiffness && ~isempty(Muscles) && sum([Muscles.exist])
-        Kt = eye(3);
-        [V,D] = eig(Kt);
-        F_ef=[];V_ef=[];
-        for i_for=1:3
-            X_array = [0; V(1,i_for)*D(i_for,i_for)];
-            Y_array = [0; V(2,i_for)*D(i_for,i_for)];
-            Z_array = [0; V(3,i_for)*D(i_for,i_for)];
-            F_ef = [F_ef; [1 2]+size(V_ef,1)]; %#ok<AGROW>
-            V_ef = [V_ef; [X_array Y_array Z_array]]; %#ok<AGROW>
-        end
-        if isfield(AnimateParameters,'Mode')  && (isequal(AnimateParameters.Mode, 'Figure') ...
-                || isequal(AnimateParameters.Mode, 'GenerateParameters') ...
-                || isequal(AnimateParameters.Mode, 'GenerateAnimate'))
-            finv = figure('visible','off');
-            Ext = gpatch(F_ef,V_ef,[],0.4*[1 1 1],1,4);
-            copyobj(Ext,ax);
-            close(finv);
-        elseif f==f_affich(1)
-            Ext = gpatch(F_ef,V_ef,[],Colors.color_vect_force,1,4);
-        end
-        animStruct.Handles{f} = [animStruct.Handles{f} Ext];
-        animStruct.Props{f} = {animStruct.Props{f}{:},'Vertices'};
-        animStruct.Set{f} = {animStruct.Set{f}{:},V_ef};
-    end
     
+    if options.Stiffness && ~isempty(Muscles) && sum([Muscles.exist])
+        load([filename '/MuscleForcesComputationResults.mat']); %#ok<LOAD>
+        effector = [22 3; 28 3]; %Effectors : Solids RFOOT (22), LFOOT (28) and markers anat_position RTOE (3), LTOE (3)
+        i_eff = 1;
+        for solid_eff=effector(:,1)'
+            Kt = MuscleForcesComputationResults.TaskStiffness{f};
+            Kt = Kt(i_eff);
+            [V,D] = eig(Kt);
+            D = D./(3*max(max(D)));
+            F_ef=[];V_ef=[];
+            for i_for=1:3
+                P = Human_model_bis(solid_eff).p+Human_model_bis(solid_eff).R*Human_model_bis(solid_eff).anat_position{effector(i_eff,2),2};%regarder si P a bougé ou pas, et changer la couleur, push quand l'affichage est ok
+                X_array = [P(1); V(1,i_for)*D(i_for,i_for)];
+                Y_array = [P(2); V(2,i_for)*D(i_for,i_for)];
+                Z_array = [P(3); V(3,i_for)*D(i_for,i_for)];
+                F_ef = [F_ef; [1 2]+size(V_ef,1)]; %#ok<AGROW>
+                V_ef = [V_ef; [X_array Y_array Z_array]]; %#ok<AGROW>
+            end
+            if isfield(AnimateParameters,'Mode')  && (isequal(AnimateParameters.Mode, 'Figure') ...
+                    || isequal(AnimateParameters.Mode, 'GenerateParameters') ...
+                    || isequal(AnimateParameters.Mode, 'GenerateAnimate'))
+                finv = figure('visible','off');
+                Ext = gpatch(F_ef,V_ef,[],0.4*[1 1 1],1,4);
+                copyobj(Ext,ax);
+                close(finv);
+            elseif f==f_affich(1)
+                Ext = gpatch(F_ef,V_ef,[],Colors.color_vect_force,1,4);
+            end
+            animStruct.Handles{f} = [animStruct.Handles{f} Ext];
+            animStruct.Props{f} = {animStruct.Props{f}{:},'Vertices'};
+            animStruct.Set{f} = {animStruct.Set{f}{:},V_ef};
+            i_eff=i_eff+1;
+        end
+    end
     %% Vectors of external forces issued from prediction
     if options.external_forces_p
         extern_forces_f = Colors.external_forces_pred(f).Visual;

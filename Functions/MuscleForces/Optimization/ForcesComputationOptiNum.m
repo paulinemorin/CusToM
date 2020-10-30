@@ -27,6 +27,7 @@ disp(['Forces Computation (' filename ') ...'])
 %% Loading variables
 
 load([filename '/ExperimentalData.mat']); %#ok<LOAD>
+load([filename '/ExternalForcesComputationResults.mat']); %#ok<LOAD>
 time = ExperimentalData.Time;
 freq = 1/time(2);
 
@@ -41,7 +42,7 @@ torques =InverseDynamicsResults.JointTorques;
 
 
 Nb_q=size(q,1);
-Nb_frames=size(torques,2);
+Nb_frames= 2;%size(torques,2);
 
 %existing muscles
 idm = logical([Muscles.exist]);
@@ -89,12 +90,12 @@ options2 = optimoptions(@fmincon,'Algorithm','sqp','Display','final','GradObj','
 
 h = waitbar(0,['Forces Computation (' filename ')']);
 
-if isfield(BiomechanicalModel.OsteoArticularModel,'ClosedLoop') && ~isempty([BiomechanicalModel.OsteoArticularModel.ClosedLoop])    
+if isfield(BiomechanicalModel.OsteoArticularModel,'ClosedLoop') && ~isempty([BiomechanicalModel.OsteoArticularModel.ClosedLoop])
     % TO BE CHANGED AFTER CALIBRATION
     k=ones(size(q,1),1);
-        
+    
     [solid_path1,solid_path2,num_solid,num_markers]=Data_ClosedLoop(BiomechanicalModel.OsteoArticularModel);
-
+    
     dependancies=KinematicDependancy(BiomechanicalModel.OsteoArticularModel);
     % Closed-loop constraints
     KT=ConstraintsJacobian(BiomechanicalModel,q(:,1),solid_path1,solid_path2,num_solid,num_markers,k,0.0001,dependancies)';
@@ -126,7 +127,7 @@ if isfield(BiomechanicalModel.OsteoArticularModel,'ClosedLoop') && ~isempty([Bio
         % Joint Torques
         beq=torques(idq,i)- R(idq,:,1)*Fp(:,i);
         % Optimization
-        [Aopt(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options2, AnalysisParameters.Muscles.CostfunctionOptions, Fa(:,i), Fmax);    
+        [Aopt(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options2, AnalysisParameters.Muscles.CostfunctionOptions, Fa(:,i), Fmax);
         % Muscular activity
         A0=Aopt(:,i);
         Fopt(:,i) = Fa(:,i).*Aopt(1:Nb_muscles,i)+Fp(:,i);
@@ -152,44 +153,26 @@ else
     Fopt(:,1) = Fa(:,1).*Aopt(:,1)+Fp(:,1);
     waitbar(1/Nb_frames)
     
-    for i=2:Nb_frames % for folliwing frames
-        % Moment arms and Active forces
-        Aeq=R(idxj,:,i).*Fa(:,i)';
-        % Joint Torques and Passive force
-        beq=torques(idxj,i) - R(idxj,:,i)*Fp(:,i);
-        % Optimization
-        [Aopt(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options2, AnalysisParameters.Muscles.CostfunctionOptions, Fa(:,i), Fmax);        
-        % Muscular activity
-        A0=Aopt(:,i);
-        Fopt(:,i) = Fa(:,i).*Aopt(:,i)+Fp(:,i);
-        waitbar(i/Nb_frames)
-    end
-    
-    effector = [22 3]; %Choice of the effector : Solid RFOOT (22) and marker anat_position RTOE (3)
-    % Determiner les chaînes musculaires + solide d'intérêt
-    
-    % Chaînes hand -> thorax et pied -> pelvis 
-    if effector(1) == 35 %RHand (35)
-        SolidConcerned = find_solid_path(BiomechanicalModel.OsteoArticularModel,35,7); %list of solids between RHand (35) and Thorax (7)
-    elseif effector(1) == 22 %RFoot (22)
-        SolidConcerned = find_solid_path(BiomechanicalModel.OsteoArticularModel,22,1); %list of solids between RFoot (22) and PelvisSacrum (1)
-    end
-    MuscleConcerned = []; %construction of MuscleConcerned
-    for i=1:82 
-        if isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(1),SolidConcerned)) && isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(end),SolidConcerned)) %v�rifying that the first 
-    %and last solids connected to the muscle belong to SolidConcerned
-        MuscleConcerned = [MuscleConcerned i];%A FINIR
+    effector = [22 3; 28 3]; %Effectors : Solids RFOOT (22), LFOOT (28) and markers anat_position RTOE (3), LTOE (3)
+    i_eff = 1;
+    for solid_eff=effector(:,1)' %among the effector solids
+        if solid_eff == 35 %RHand (35)
+            SolidConcerned_eff = find_solid_path(BiomechanicalModel.OsteoArticularModel,solid_eff,7); %list of solids between solid_eff and Thorax (7)
+        elseif (solid_eff==22) || (solid_eff == 28) %RFoot (22) or LFoot (28)
+            SolidConcerned_eff = find_solid_path(BiomechanicalModel.OsteoArticularModel,solid_eff,1); %list of solids between solid_eff and PelvisSacrum (1)
         end
+        MuscleConcerned_eff = []; %construction of MuscleConcerned
+        for i=1:Nb_muscles
+            if ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(1),SolidConcerned_eff)) && ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(end),SolidConcerned_eff)) %verifying that the first
+                %and last solids connected to the muscle belong to
+                %SolidConcerned_eff
+                MuscleConcerned_eff = [MuscleConcerned_eff i];
+            end
+        end
+        SolidConcerned(i_eff).list = SolidConcerned_eff;
+        MuscleConcerned(i_eff).list = MuscleConcerned_eff;
+        i_eff = i_eff + 1;
     end
-    FMT = MuscleForcesComputationResults;
-    FMT = MuscleForcesComputationResults.MuscleForces(:,1); 
-    Fext = ExternalForcesComputationResults.ExternalForcesExperiments(1).fext(22);
-    Fext = Fext.fext(1:3,1); %external forces applied to the RFOOt at first frame
-    
-    MuscleForcesComputationResults.TaskStiffness = TaskStiffness(BiomechanicalModel,MuscleConcerned,SolidConcerned,q,Fext,FMT,effector);
-
-    
-    
     
     % Static optimization results
     MuscleForcesComputationResults.MuscleActivations(idm,:) = Aopt;
@@ -197,11 +180,40 @@ else
     MuscleForcesComputationResults.MuscleLengths= Lmt;
     MuscleForcesComputationResults.MuscleLeverArm = R;
     
-end
-
-close(h)
-
-disp(['... Forces Computation (' filename ') done'])
-
-
+    %initialisation
+    Kt=cell(numel(effector(:,1)),Nb_frames);
+    FMT = MuscleForcesComputationResults.MuscleForces(:,1);
+    i_eff = 1;
+    for solid_eff=effector(:,1)'
+        Fext = ExternalForcesComputationResults.ExternalForcesExperiments(1).fext(solid_eff);
+        Fext = Fext.fext(1:3,1); %external forces applied to the solid_eff at the first frame
+        Kt(i_eff,1) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,SolidConcerned(i_eff).list,q(:,1),Fext,FMT,effector(i_eff,:))};
+        i_eff = i_eff+1;
+    end
+%     MuscleForcesComputationResults.TaskStiffness(1) = {Kt(:,1)};
+    
+    for i=2:Nb_frames % for following frames
+        % Moment arms and Active forces
+        Aeq=R(idxj,:,i).*Fa(:,i)';
+        % Joint Torques and Passive force
+        beq=torques(idxj,i) - R(idxj,:,i)*Fp(:,i);
+        % Optimization
+        [Aopt(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options2, AnalysisParameters.Muscles.CostfunctionOptions, Fa(:,i), Fmax);
+        % Muscular activity
+        A0=Aopt(:,i);
+        Fopt(:,i) = Fa(:,i).*Aopt(:,i)+Fp(:,i);
+        waitbar(i/Nb_frames)
+        
+        FMT = MuscleForcesComputationResults.MuscleForces(:,i);
+        i_eff = 1;
+        for solid_eff=effector(:,1)'
+            Fext = ExternalForcesComputationResults.ExternalForcesExperiments(i).fext(solid_eff);
+            Fext = Fext.fext(1:3,1); %external forces applied to the solid_eff at the i-frame
+            Kt(i_eff,i) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,SolidConcerned(i_eff).list,q(:,i),Fext,FMT,effector(i_eff,:))};
+            i_eff = i_eff+1;
+        end
+        MuscleForcesComputationResults.TaskStiffness = Kt;
+    end
+    close(h)
+    disp(['... Forces Computation (' filename ') done'])
 end
