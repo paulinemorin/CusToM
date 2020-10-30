@@ -859,16 +859,15 @@ for f=f_affich
         effector = [22 3; 28 3]; %Effectors : Solids RFOOT (22), LFOOT (28) and markers anat_position RTOE (3), LTOE (3)
         i_eff = 1;
         for solid_eff=effector(:,1)'
-            Kt = MuscleForcesComputationResults.TaskStiffness{f};
-            Kt = Kt(i_eff);
+            Kt = MuscleForcesComputationResults.TaskStiffness{i_eff,f};
             [V,D] = eig(Kt);
-            D = D./(3*max(max(D)));
+            D = D./(3*max(max(abs(D))));
             F_ef=[];V_ef=[];
             for i_for=1:3
-                P = Human_model_bis(solid_eff).p+Human_model_bis(solid_eff).R*Human_model_bis(solid_eff).anat_position{effector(i_eff,2),2};%regarder si P a bougé ou pas, et changer la couleur, push quand l'affichage est ok
-                X_array = [P(1); V(1,i_for)*D(i_for,i_for)];
-                Y_array = [P(2); V(2,i_for)*D(i_for,i_for)];
-                Z_array = [P(3); V(3,i_for)*D(i_for,i_for)];
+                P = Human_model_bis(solid_eff).p+Human_model_bis(solid_eff).R*Human_model_bis(solid_eff).anat_position{effector(i_eff,2),2};%regarder si P a bougï¿½ ou pas, et changer la couleur, push quand l'affichage est ok
+                X_array = [P(1);  P(1) +  V(1,i_for)*D(i_for,i_for)];
+                Y_array = [P(2); P(2) + V(2,i_for)*D(i_for,i_for)];
+                Z_array = [P(3); P(3) + V(3,i_for)*D(i_for,i_for)];
                 F_ef = [F_ef; [1 2]+size(V_ef,1)]; %#ok<AGROW>
                 V_ef = [V_ef; [X_array Y_array Z_array]]; %#ok<AGROW>
             end
@@ -876,7 +875,7 @@ for f=f_affich
                     || isequal(AnimateParameters.Mode, 'GenerateParameters') ...
                     || isequal(AnimateParameters.Mode, 'GenerateAnimate'))
                 finv = figure('visible','off');
-                Ext = gpatch(F_ef,V_ef,[],0.4*[1 1 1],1,4);
+                Ext = gpatch(F_ef,V_ef,[],0.4*[1 0 0],1,4);
                 copyobj(Ext,ax);
                 close(finv);
             elseif f==f_affich(1)

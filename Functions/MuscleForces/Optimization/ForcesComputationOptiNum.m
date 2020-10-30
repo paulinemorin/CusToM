@@ -42,7 +42,7 @@ torques =InverseDynamicsResults.JointTorques;
 
 
 Nb_q=size(q,1);
-Nb_frames= 2;%size(torques,2);
+Nb_frames= size(torques,2);
 
 %existing muscles
 idm = logical([Muscles.exist]);
@@ -188,6 +188,7 @@ else
         Fext = ExternalForcesComputationResults.ExternalForcesExperiments(1).fext(solid_eff);
         Fext = Fext.fext(1:3,1); %external forces applied to the solid_eff at the first frame
         Kt(i_eff,1) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,SolidConcerned(i_eff).list,q(:,1),Fext,FMT,effector(i_eff,:))};
+        Kt{i_eff,1} = (Kt{i_eff,1} + Kt{i_eff,1}')/2;
         i_eff = i_eff+1;
     end
 %     MuscleForcesComputationResults.TaskStiffness(1) = {Kt(:,1)};
@@ -210,10 +211,14 @@ else
             Fext = ExternalForcesComputationResults.ExternalForcesExperiments(i).fext(solid_eff);
             Fext = Fext.fext(1:3,1); %external forces applied to the solid_eff at the i-frame
             Kt(i_eff,i) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,SolidConcerned(i_eff).list,q(:,i),Fext,FMT,effector(i_eff,:))};
+            Kt{i_eff,i} = (Kt{i_eff,i} + Kt{i_eff,i}')/2;
             i_eff = i_eff+1;
         end
-        MuscleForcesComputationResults.TaskStiffness = Kt;
     end
+    
+    MuscleForcesComputationResults.TaskStiffness = Kt;
+
+    
     close(h)
     disp(['... Forces Computation (' filename ') done'])
 end
