@@ -36,7 +36,6 @@ function [animStruct]=AnimationFramebyFrame(ax,fig,filename,AnalysisParameters,M
 options=OptionsChoices(BiomechanicalModel,AnimateParameters);
 Colors=ColorsAnimation(filename,Muscles,AnimateParameters,Human_model,ModelParameters,AnalysisParameters,options,Markers_set);
 
-
 for f=f_affich
     
     if isfield(AnimateParameters,'Mode')  && (isequal(AnimateParameters.Mode, 'Figure') || isequal(AnimateParameters.Mode, 'Picture'))
@@ -953,7 +952,7 @@ for f=f_affich
     if isfield(AnimateParameters,'Mode')  && isequal(AnimateParameters.Mode, 'Figure')
         % drawing an saving
         drawnow;
-        M(f) = getframe(fig); %#ok<AGROW>
+        animStruct.M(f) = getframe(fig); %#ok<AGROW>
     end
     
     if isfield(AnimateParameters,'Mode')  && isequal(AnimateParameters.Mode, 'Picture')
@@ -962,5 +961,6 @@ for f=f_affich
     end
     
 end
+
 
 end
