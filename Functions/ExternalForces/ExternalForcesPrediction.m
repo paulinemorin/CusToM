@@ -57,7 +57,8 @@ NbPointsPrediction = numel(Prediction);
 
 %% Contact detection
 %Contact_detection = ContactDetectionThreeshold(filename, AnalysisParameters, BiomechanicalModel);
-Contact_detection = ContactDetectionOne(filename, AnalysisParameters);
+%Contact_detection = ContactDetectionOne(filename, AnalysisParameters);
+Contact_detection = ContactDetectionAutomaticThreeshold(filename, AnalysisParameters, BiomechanicalModel);
 %Contact_detection = ones(NbPointsPrediction, nbframe); 
 
 %% Gravity
@@ -166,13 +167,19 @@ for i=1:nbframe
         Prediction(pred).pz(i)=Prediction(pred).pos_anim(3);
         
         Activ_Contact_Point = sum(Contact_detection(:,i));
-        Cpi =( numel(Prediction)/Activ_Contact_Point )* Force_max_TOR(Contact_detection(pred,i),Mass);
+        
+        if Activ_Contact_Point ~= 0
+            Cpi =( numel(Prediction)/Activ_Contact_Point )* Force_max_TOR(Contact_detection(pred,i),Mass);
+        else
+            Cpi = 0;
+        end
             Fx(pred,i)=Cpi;
             Fy(pred,i)=Cpi;
             Fz(pred,i)=Cpi;
             Prediction(pred).efforts_max(i,1)=Cpi; %Fx
             Prediction(pred).efforts_max(i,2)=Cpi; %Fy
             Prediction(pred).efforts_max(i,3)=Cpi; %Fz
+        
     end
     Fmax=[Fx(:,i)' Fy(:,i)' Fz(:,i)'];
     
