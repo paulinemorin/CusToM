@@ -165,7 +165,8 @@ for i=1:nbframe
         Prediction(pred).py(i)=Prediction(pred).pos_anim(2);
         Prediction(pred).pz(i)=Prediction(pred).pos_anim(3);
         
-        Cpi = Force_max_TOR(Contact_detection(pred,i),Mass);
+        Activ_Contact_Point = sum(Contact_detection(:,i));
+        Cpi =( numel(Prediction)/Activ_Contact_Point )* Force_max_TOR(Contact_detection(pred,i),Mass);
             Fx(pred,i)=Cpi;
             Fy(pred,i)=Cpi;
             Fz(pred,i)=Cpi;
