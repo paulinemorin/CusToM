@@ -46,12 +46,17 @@ time = ExperimentalData.Time;
 
 freq=1/time(2);
 
+nbframe=size(q,1);
+
 %% Creation of a structure to add contact points
 for i=1:numel(AnalysisParameters.Prediction.ContactPoint)
     Prediction(i).points_prediction_efforts = AnalysisParameters.Prediction.ContactPoint{i}; %#ok<AGROW>
 end
 Prediction=verif_Prediction_Humanmodel(Human_model,Prediction);
 NbPointsPrediction = numel(Prediction);
+
+%% Contact detection
+Contact_detection = ones(NbPointsPrediction, nbframe); 
 
 %% Gravity
 g=[0 0 -9.81]';
@@ -62,12 +67,9 @@ if isfield(InverseKinematicsResults,'FreeJointCoordinates')
     Human_model=Human_model(1:(numel(Human_model)-6));
 end
 
-
 dt=1/freq;
 dq=derivee2(dt,q);  % vitesses
 ddq=derivee2(dt,dq);  % accélérations
-
-nbframe=size(q,1);
 
 %% Définition des données cinématiques du pelvis
 % (position / vitesse / accélération / orientation / vitesse angulaire / accélération angulaire)
@@ -161,7 +163,9 @@ for i=1:nbframe
         Prediction(pred).py(i)=Prediction(pred).pos_anim(2);
         Prediction(pred).pz(i)=Prediction(pred).pos_anim(3);
         Prediction(pred).vitesse_temps(i)=sqrt(Prediction(pred).vitesse(1,:)^2+Prediction(pred).vitesse(2,:)^2+Prediction(pred).vitesse(3,:)^2); % Recuperation de la norme de la vitesse (repère monde)
-            Cpi = Force_max_TOR(Prediction(pred).pz(i),Prediction(pred).vitesse_temps(i),Mass,PositionThreshold,VelocityThreshold);
+        
+        Cpi = Force_max_TOR_detect(Contact_detection(pred,i),Mass);
+        %Cpi = Force_max_TOR(Prediction(pred).pz(i),Prediction(pred).vitesse_temps(i),Mass,PositionThreshold,VelocityThreshold);
             Fx(pred,i)=Cpi;
             Fy(pred,i)=Cpi;
             Fz(pred,i)=Cpi;
