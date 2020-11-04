@@ -56,7 +56,9 @@ Prediction=verif_Prediction_Humanmodel(Human_model,Prediction);
 NbPointsPrediction = numel(Prediction);
 
 %% Contact detection
-Contact_detection = ones(NbPointsPrediction, nbframe); 
+%Contact_detection = ContactDetectionThreeshold(filename, AnalysisParameters, BiomechanicalModel);
+Contact_detection = ContactDetectionThreesholdOne(filename, AnalysisParameters);
+%Contact_detection = ones(NbPointsPrediction, nbframe); 
 
 %% Gravity
 g=[0 0 -9.81]';
@@ -140,8 +142,8 @@ options = optimoptions(@fmincon,'Algorithm','sqp','Display','off','GradObj','off
 %% Calcul frame par frame
 h = waitbar(0,['External Forces Prediction (' filename ')']);
 Mass = ModelParameters.Mass;
-PositionThreshold = AnalysisParameters.Prediction.PositionThreshold;
-VelocityThreshold = AnalysisParameters.Prediction.VelocityThreshold;
+coef_friction = AnalysisParameters.Prediction.FrictionCoef;
+
 for i=1:nbframe
     %attribution à chaque articulation de la position/vitesse/accélération (position/speed/acceleration for each joint)
     Human_model(1).p=p_pelvis(i,:)';
@@ -162,10 +164,8 @@ for i=1:nbframe
         Prediction(pred).px(i)=Prediction(pred).pos_anim(1);
         Prediction(pred).py(i)=Prediction(pred).pos_anim(2);
         Prediction(pred).pz(i)=Prediction(pred).pos_anim(3);
-        Prediction(pred).vitesse_temps(i)=sqrt(Prediction(pred).vitesse(1,:)^2+Prediction(pred).vitesse(2,:)^2+Prediction(pred).vitesse(3,:)^2); % Recuperation de la norme de la vitesse (repère monde)
         
-        Cpi = Force_max_TOR_detect(Contact_detection(pred,i),Mass);
-        %Cpi = Force_max_TOR(Prediction(pred).pz(i),Prediction(pred).vitesse_temps(i),Mass,PositionThreshold,VelocityThreshold);
+        Cpi = Force_max_TOR(Contact_detection(pred,i),Mass);
             Fx(pred,i)=Cpi;
             Fy(pred,i)=Cpi;
             Fz(pred,i)=Cpi;
@@ -203,8 +203,6 @@ for i=1:nbframe
     %% Taking friction into account for every point to point link, |Fx|<0.5|Fz| et |Fy|<0.5|Fz|
     Afric=zeros(4*numel(Prediction),3*numel(Prediction));
     bfric=zeros(4*numel(Prediction),1);
-    
-    coef_friction = AnalysisParameters.Prediction.FrictionCoef;
 
     for k = 1:(numel(Prediction))
         Afric(k,k)=1*Prediction(k).efforts_max(i,1);
