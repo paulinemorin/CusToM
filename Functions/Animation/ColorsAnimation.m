@@ -70,7 +70,7 @@ if options.mod_marker_anim || options.exp_marker_anim || options.mass_centers_an
         end
     end
     if options.mass_centers_anim
-        Colors.num_s_mass_center=find([Human_model.Visual]);
+        Colors.num_s_mass_center=find([Human_model]);
         Colors.nb_ms = length(Colors.num_s_mass_center);
         Colors.C_ms(1:Colors.nb_ms,:)=repmat([34,139,34]/255,[Colors.nb_ms 1]);
     end

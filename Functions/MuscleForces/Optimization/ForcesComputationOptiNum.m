@@ -191,7 +191,7 @@ else
         Kt{i_eff,1} = (Kt{i_eff,1} + Kt{i_eff,1}')/2;
         i_eff = i_eff+1;
     end
-%     MuscleForcesComputationResults.TaskStiffness(1) = {Kt(:,1)};
+    %     MuscleForcesComputationResults.TaskStiffness(1) = {Kt(:,1)};
     
     for i=2:Nb_frames % for following frames
         % Moment arms and Active forces
@@ -215,9 +215,11 @@ else
             i_eff = i_eff+1;
         end
     end
-    
     MuscleForcesComputationResults.TaskStiffness = Kt;
-
+    
+    %Optimisation
+    [Amax,fval]=-fmincon(@(A)funKtmax(A,i,BiomechanicalModel,MuscleConcerned(i_eff).list,SolidConcerned(i_eff).list,q,Fext,Fa,Fp,effector(i_eff,:)));
+    Ktmax=-fval;
     
     close(h)
     disp(['... Forces Computation (' filename ') done'])
