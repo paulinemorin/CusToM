@@ -1,4 +1,4 @@
-function [Contact_detection] = ContactDetectionThreesholdOne(filename, AnalysisParameters)
+function [Contact_detection] = ContactDetectionOne(filename, AnalysisParameters)
 %   INPUT
 %   - filename: name of the file to process (character string)
 %   - AnalysisParameters: parameters of the musculoskeletal analysis,

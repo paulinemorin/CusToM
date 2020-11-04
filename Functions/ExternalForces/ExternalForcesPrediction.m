@@ -57,7 +57,7 @@ NbPointsPrediction = numel(Prediction);
 
 %% Contact detection
 %Contact_detection = ContactDetectionThreeshold(filename, AnalysisParameters, BiomechanicalModel);
-Contact_detection = ContactDetectionThreesholdOne(filename, AnalysisParameters);
+Contact_detection = ContactDetectionOne(filename, AnalysisParameters);
 %Contact_detection = ones(NbPointsPrediction, nbframe); 
 
 %% Gravity
