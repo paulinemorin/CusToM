@@ -56,10 +56,19 @@ Prediction=verif_Prediction_Humanmodel(Human_model,Prediction);
 NbPointsPrediction = numel(Prediction);
 
 %% Contact detection
-%Contact_detection = ContactDetectionThreeshold(filename, AnalysisParameters, BiomechanicalModel);
-%Contact_detection = ContactDetectionOne(filename, AnalysisParameters);
-Contact_detection = ContactDetectionAutomaticThreeshold(filename, AnalysisParameters, BiomechanicalModel);
-%Contact_detection = ones(NbPointsPrediction, nbframe); 
+
+if AnalysisParameters.Prediction.ContactDetection == 0
+    Contact_detection = ContactDetectionThreeshold(filename, AnalysisParameters, BiomechanicalModel);
+%elseif AnalysisParameters.Prediction.ContactDetection == 1
+%    Contact_detection = ContactDetectionAutomaticThreeshold(filename, AnalysisParameters, BiomechanicalModel);
+elseif AnalysisParameters.Prediction.ContactDetection == 2
+    Contact_detection = ContactDetectionOne(filename, AnalysisParameters);
+%elseif AnalysisParameters.Prediction.ContactDetection == 3
+%    Contact_detection = AddMarkers(filename, AnalysisParameters);
+%elseif AnalysisParameters.Prediction.ContactDetection == 4
+%    Contact_detection = Perso(filename, AnalysisParameters);
+end
+
 
 %% Gravity
 g=[0 0 -9.81]';
