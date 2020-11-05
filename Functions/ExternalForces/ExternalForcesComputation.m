@@ -40,12 +40,7 @@ for i = 1:numel(AnalysisParameters.filename)
         if  isempty(AnalysisParameters.Prediction.ContactPoint)
             error("You need to choose contact points in External Forces Prediction options. Operation aborted.");
         end
-        
-        if AnalysisParameters.ID.AddMarkers == 0
           [ExternalForcesComputationResults] = ExternalForcesPrediction(filename, AnalysisParameters, BiomechanicalModel, ModelParameters);
-        elseif AnalysisParameters.ID.AddMarkers == 1
-            [ExternalForcesComputationResults] = ExternalForcesPrediction_AddMarkers(filename, AnalysisParameters, BiomechanicalModel, ModelParameters);
-        end
     end
     save([filename '/ExternalForcesComputationResults'],'ExternalForcesComputationResults');
 end
