@@ -58,17 +58,16 @@ NbPointsPrediction = numel(Prediction);
 %% Contact detection
 
 if AnalysisParameters.Prediction.ContactDetection == 0
-    Contact_detection = ContactDetectionThreeshold(filename, AnalysisParameters, BiomechanicalModel);
+    Contact_detection = ContactDetectionThreshold(filename, AnalysisParameters, Human_model);
 %elseif AnalysisParameters.Prediction.ContactDetection == 1
-%    Contact_detection = ContactDetectionAutomaticThreeshold(filename, AnalysisParameters, BiomechanicalModel);
+%    Contact_detection = ContactDetectionAutomaticThreshold(filename, AnalysisParameters, BiomechanicalModel);
 elseif AnalysisParameters.Prediction.ContactDetection == 2
     Contact_detection = ContactDetectionOne(filename, AnalysisParameters);
-%elseif AnalysisParameters.Prediction.ContactDetection == 3
-%    Contact_detection = AddMarkers(filename, AnalysisParameters);
+elseif AnalysisParameters.Prediction.ContactDetection == 3
+    Contact_detection = ContactDetectionAddMarkers(filename, AnalysisParameters, Human_model);
 %elseif AnalysisParameters.Prediction.ContactDetection == 4
 %    Contact_detection = Perso(filename, AnalysisParameters);
 end
-
 
 %% Gravity
 g=[0 0 -9.81]';
@@ -188,7 +187,6 @@ for i=1:nbframe
             Prediction(pred).efforts_max(i,1)=Cpi; %Fx
             Prediction(pred).efforts_max(i,2)=Cpi; %Fy
             Prediction(pred).efforts_max(i,3)=Cpi; %Fz
-        
     end
     Fmax=[Fx(:,i)' Fy(:,i)' Fz(:,i)'];
     
@@ -314,8 +312,10 @@ if ~isequal(AnalysisParameters.General.InputData, @MVNX_V3)
             for i=unique([Prediction.num_solid]) % for every solid
                 T = external_forces_pred(f).fext(i).fext;
                 % CoP position
+                pz_pieds = reshape([Prediction.pz], [numel([Prediction.pz])/length(Prediction) length(Prediction)]);
                 CoP = cross(T(:,1),T(:,2))/(norm(T(:,1))^2);
                 %CoP = CoP - (CoP(3)/T(3,1))*T(:,1); % point on z=0
+                CoP = CoP - ((CoP(3)-mean(pz_pieds(f,:)))/T(3,1))*T(:,1); % point at average altitude of prediction points
                 % external_forces structure
                 external_forces_pred(f).Visual = [external_forces_pred(f).Visual [CoP;T(:,1)]];
             end
