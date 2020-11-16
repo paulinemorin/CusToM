@@ -27,7 +27,7 @@ nmr=numel(idxm);
 
 %
 if length(qval)==numel(BiomechanicalModel.OsteoArticularModel(:)) && ~isempty(intersect({BiomechanicalModel.OsteoArticularModel.name},'root0'))
-    q=qval(1:end-6); %only degrees of freedom of the body, not the floating base.
+    q=qval(1:end-6); %only degrees of freedom of the body, not the floating base
 else
     q=qval;
 end
@@ -37,6 +37,8 @@ if isfield(BiomechanicalModel,'Coupling')
 else
     C= ones(nmr,length(q));
 end
+
+
 [row,col] = find(C);
 
 %% Computation of moment arms
@@ -49,12 +51,12 @@ for k=1:length(row)
     
     Lpdq=zeros(nmr,1);
     Lmdq=zeros(nmr,1);
-    j= row(k) ; % muscle indice 
+    j= row(k) ; % muscle indice
     % compute the length of the muscle at q+dq
-%    Lpdq(j) = Muscle_lengthNum(Human_model,Muscles(idxm(j)),q+dq);
+    Lpdq(j) = Muscle_lengthNum(Human_model,Muscles(idxm(j)),q+dq);
     % compute the length of the muscle at q-dq
     Lmdq(j) = Muscle_lengthNum(Human_model,Muscles(idxm(j)),q-dq);
-
+    
     R(:,i)=(-Lpdq+Lmdq)/(2*dp); % it is -dl/dq
 end
 % beware that the matrix is finally nq*nm
