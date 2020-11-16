@@ -51,7 +51,7 @@ for k=1:length(row)
     Lmdq=zeros(nmr,1);
     j= row(k) ; % muscle indice 
     % compute the length of the muscle at q+dq
-    Lpdq(j) = Muscle_lengthNum(Human_model,Muscles(idxm(j)),q+dq);
+%    Lpdq(j) = Muscle_lengthNum(Human_model,Muscles(idxm(j)),q+dq);
     % compute the length of the muscle at q-dq
     Lmdq(j) = Muscle_lengthNum(Human_model,Muscles(idxm(j)),q-dq);
 

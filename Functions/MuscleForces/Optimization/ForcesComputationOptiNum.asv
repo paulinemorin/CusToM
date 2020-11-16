@@ -59,7 +59,7 @@ Lmt=zeros(Nb_muscles,Nb_frames);
 R=zeros(Nb_q,Nb_muscles,Nb_frames);
 for i=1:Nb_frames % for each frames
     Lmt(idm,i)   =   MuscleLengthComputationNum(BiomechanicalModel,q(:,i)); %dependant of every q (q_complete)
-   % R(:,:,i)    =   MomentArmsComputationNum(BiomechanicalModel,q(:,i),0.0001); %depend on reduced set of q (q_red)
+    R(:,:,i)    =   MomentArmsComputationNum(BiomechanicalModel,q(:,i),0.0001); %depend on reduced set of q (q_red)
 end
 
 Lm = Lmt./(Ls./L0+1);
@@ -223,6 +223,8 @@ else
     Amax = ones(Nb_muscles,1);
     [Amax,fval]=-fmincon(@(A)funKtmax(A,i,BiomechanicalModel,MuscleConcerned(i_eff).list,SolidConcerned(i_eff).list,q,Fext,Fa,Fp,effector(i_eff,:)),A0,[],[],[],[],zeros(Nb_muscles),ones(Nb_muscles));
     Ktmax=-fval;
+    min a^2 + ( pourcentage_raideur - Kt(a)/Ktmax)^2;
+    
     
     close(h)
     disp(['... Forces Computation (' filename ') done'])
