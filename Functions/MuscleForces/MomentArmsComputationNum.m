@@ -61,9 +61,4 @@ for k=1:length(row)
 end
 % beware that the matrix is finally nq*nm
 R=R';
-
-
-
-
-
 end
