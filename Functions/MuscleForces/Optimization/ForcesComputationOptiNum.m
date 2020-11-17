@@ -42,7 +42,7 @@ torques =InverseDynamicsResults.JointTorques;
 
 
 Nb_q=size(q,1);
-Nb_frames= size(torques,2);
+Nb_frames= 2 %size(torques,2);
 
 %existing muscles
 idm = logical([Muscles.exist]);
@@ -59,7 +59,7 @@ Lmt=zeros(Nb_muscles,Nb_frames);
 R=zeros(Nb_q,Nb_muscles,Nb_frames);
 for i=1:Nb_frames % for each frames
     Lmt(idm,i)   =   MuscleLengthComputationNum(BiomechanicalModel,q(:,i)); %dependant of every q (q_complete)
-   % R(:,:,i)    =   MomentArmsComputationNum(BiomechanicalModel,q(:,i),0.0001); %depend on reduced set of q (q_red)
+    % R(:,:,i)    =   MomentArmsComputationNum(BiomechanicalModel,q(:,i),0.0001); %depend on reduced set of q (q_red)
 end
 
 Lm = Lmt./(Ls./L0+1);
@@ -213,17 +213,20 @@ else
             Kt(i_eff,i) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,SolidConcerned(i_eff).list,q(:,i),Fext,FMT,effector(i_eff,:))};
             Kt{i_eff,i} = (Kt{i_eff,i} + Kt{i_eff,i}')/2;
             i_eff = i_eff+1;
+            
+            MuscleForcesComputationResults.TaskStiffness = Kt;
+            
+            %Optimisation
+            options = optimoptions('fmincon','Algorithm','interior-point','PlotFcn','optimplotfval');
+            
+            Amin = zeros(Nb_muscles,1);
+            A0  = 0.5*ones(Nb_muscles,1);
+            Amax = ones(Nb_muscles,1);
+            [Amax,fval]=fmincon(@(A)funKtmax(A,BiomechanicalModel,MuscleConcerned(i_eff).list,SolidConcerned(i_eff).list,q(:,i),Fext,Fa(:,i),Fp(:,i),effector(i_eff,:)),A0,[],[],[],[],zeros(Nb_muscles,1),ones(Nb_muscles,1),[],options);
+            Ktmax=-fval;
+            
         end
     end
-    MuscleForcesComputationResults.TaskStiffness = Kt;
-    
-    %Optimisation
-    Amin = zeros(Nb_muscles,1);
-    A0  = 0.5*ones(Nb_muscles,1);
-    Amax = ones(Nb_muscles,1);
-    [Amax,fval]=-fmincon(@(A)funKtmax(A,i,BiomechanicalModel,MuscleConcerned(i_eff).list,SolidConcerned(i_eff).list,q,Fext,Fa,Fp,effector(i_eff,:)),A0,[],[],[],[],zeros(Nb_muscles),ones(Nb_muscles));
-    Ktmax=-fval;
-    
     close(h)
     disp(['... Forces Computation (' filename ') done'])
 end
