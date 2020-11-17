@@ -1,4 +1,4 @@
-function [Aopt] = PolynomialFunction(A0, Aeq, beq, Amin, Amax, fmincon_options, options,Fmax, BiomechanicalModel,MuscleConcerned,SolidConcerned, q, Fext, Fa, Fp, pourcentage_raideur, Ktmax, varargin)
+function [Aopt] = PolynomialFunction(A0, Aeq, beq, Amin, Amax, fmincon_options, options,Fmax, BiomechanicalModel,MuscleConcerned, Fext, Fa, Fp,R,dRdq,J,dJdq, pourcentage_raideur, Ktmax, varargin)
 % Optimization used for the force sharing problem: polynomial function
 %   
 %	Based on :
@@ -37,7 +37,7 @@ function [Aopt] = PolynomialFunction(A0, Aeq, beq, Amin, Amax, fmincon_options, 
 %     ind_act=find(isinf(Amax)); % first element to be infinite in Fmax
 %     cost_function = @(A) sum((Fa./Fmax(1:ind_act-1).*A(1:ind_act-1)).^(options));
 % end
-cost_function2 = @(A) norm(A)^2 + sum((pourcentage_raideur - Kt_list_eff(BiomechanicalModel,MuscleConcerned,SolidConcerned,q,Fext,Fa,A,Fp,effector)./Ktmax).^2);
+cost_function2 = @(A) norm(A)^2 + sum((pourcentage_raideur' - Kt_list_eff(BiomechanicalModel,MuscleConcerned,Fext,Fa,A,Fp,R,dRdq,J,dJdq)./Ktmax).^2);
 % Optimization
 Aopt = fmincon(cost_function2,A0,[],[],Aeq,beq,Amin,Amax,[],fmincon_options);
 end

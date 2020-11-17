@@ -1,5 +1,6 @@
-function [Kt]=Kt_list_eff(BiomechanicalModel,MuscleConcerned,SolidConcerned,q,Fext,Fa,A,Fp,effector)
+function [Kt]=Kt_list_eff(BiomechanicalModel,MuscleConcerned,Fext,Fa,A,Fp,R,dRdq,J,dJdq)
 Kt = [];
-for i_eff=1:numel(effector(:,1))
-    Kt=[Kt TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,SolidConcerned(i_eff).list,q,Fext,Fa.*A+Fp,effector(i_eff,:)];
+for i_eff=1:size(J,2)
+    Kt=[Kt funKtmax(A,BiomechanicalModel,MuscleConcerned,Fext,Fa,Fp,R,dRdq{i_eff},J{i_eff},dJdq{i_eff})];
+end
 end
