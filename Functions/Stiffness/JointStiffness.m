@@ -20,5 +20,5 @@ for i=1:n
     Kj(:,i) = -dRdq(:,:,i)*FMT;
 end
 
-Kj = Kj -R*Km*R';
+Kj = Kj - R*Km*R';
 end

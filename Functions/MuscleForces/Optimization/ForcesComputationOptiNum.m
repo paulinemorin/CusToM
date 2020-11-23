@@ -166,7 +166,7 @@ else
     % Joint Torques and Passive force
     beq=torques(idxj,1) - R(idxj,:,1)*Fp(:,1);
     %Ktmax
-    options = optimoptions('fmincon','Algorithm','interior-point','PlotFcn','optimplotfval');
+    options = optimoptions('fmincon','Algorithm','interior-point');
     Amin = zeros(Nb_muscles,1);
     A0 = 0.5*ones(Nb_muscles,1);
     Amax = ones(Nb_muscles,1);
@@ -188,7 +188,7 @@ else
     Amin = zeros(Nb_muscles,1);
     A0 = 0.5*ones(Nb_muscles,1);
     Amax = ones(Nb_muscles,1);
-    [Aopt(:,i)]=AnalysisParameters.Muscles.Costfunction(A0,[], [], Amin, Amax, [], AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R,dRdq,J,dJdq, AnalysisParameters.StiffnessPercent, Ktmax);
+    [Aopt(:,i)]=AnalysisParameters.Muscles.Costfunction(A0,Aeq,beq, Amin, Amax, [], [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(:,:,i),dRdq,J,dJdq, AnalysisParameters.StiffnessPercent, Ktmax);
     % Muscular activity
     A0=Aopt(:,1);
     Fopt(:,1) = Fa(:,1).*Aopt(:,1)+Fp(:,1);
@@ -207,8 +207,7 @@ else
     for solid_eff=effector(:,1)'
         Fext = ExternalForcesComputationResults.ExternalForcesExperiments(1).fext(solid_eff);
         Fext = Fext.fext(1:3,1); %external forces applied to the solid_eff at the first frame
-        Kt(i_eff,1) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,SolidConcerned(i_eff).list,q(:,1),Fext,FMT,effector(i_eff,:))};
-        Kt{i_eff,1} = (Kt{i_eff,1} + Kt{i_eff,1}')/2;
+        Kt(i_eff,i) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,Fext, FMT,R(:,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff})};
         i_eff = i_eff+1;
     end
     %     MuscleForcesComputationResults.TaskStiffness(1) = {Kt(:,1)};
@@ -235,7 +234,7 @@ else
         Amin = zeros(Nb_muscles,1);
         A0 = 0.5*ones(Nb_muscles,1);
         Amax = ones(Nb_muscles,1);
-        [Aopt(:,i)]=AnalysisParameters.Muscles.Costfunction(A0,[], [], Amin, Amax, [], AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R,dRdq,J,dJdq, AnalysisParameters.StiffnessPercent, Ktmax);
+        [Aopt(:,i)]=AnalysisParameters.Muscles.Costfunction(A0,Aeq,beq, Amin, Amax, [], [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(:,:,i),dRdq,J,dJdq, AnalysisParameters.StiffnessPercent, Ktmax);
         %[Aopt(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options2, AnalysisParameters.Muscles.CostfunctionOptions, Fa(:,i), Fmax);
         % Muscular activity
         A0=Aopt(:,i);
@@ -247,13 +246,15 @@ else
         for solid_eff=effector(:,1)'
             Fext = ExternalForcesComputationResults.ExternalForcesExperiments(i).fext(solid_eff);
             Fext = Fext.fext(1:3,i); %external forces applied to the solid_eff at the i-frame
-            Kt(i_eff,i) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,SolidConcerned(i_eff).list,q(:,i),Fext,FMT,effector(i_eff,:))};
-            Kt{i_eff,i} = (Kt{i_eff,i} + Kt{i_eff,i}')/2;
+            Kt(i_eff,i) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,Fext, FMT,R(:,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff})};
             i_eff = i_eff+1;
-            
-            MuscleForcesComputationResults.TaskStiffness = Kt;
         end
     end
+    
+    MuscleForcesComputationResults.TaskStiffness = Kt;
+
+    
     close(h)
+    
     disp(['... Forces Computation (' filename ') done'])
 end

@@ -21,4 +21,6 @@ for i=1:n
 end
 
 Kt = pinv(J')*(Kj-Kt)*pinv(J);
+
+Kt = (Kt+ Kt')/2;
 end
