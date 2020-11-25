@@ -56,7 +56,7 @@ for k=1:length(row)
     axis = BiomechanicalModel.OsteoArticularModel(i).FunctionalAngle;
     MomentArm = RankinNeptune(musname,axis,joints_names,q);
     if ~isempty(MomentArm)
-            R(:,i) = MomentArm;
+            R(row(k),i) = MomentArm;
     else
     dq=zeros(length(q),1); %differentiation step vector
     dq(i)=dp;
