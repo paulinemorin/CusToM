@@ -51,7 +51,7 @@ for num_fil = 1:numel(AnalysisParameters.filename)
 
     freq=1/time(2);
 
-    %% Gravité (Gravity)
+    %% Gravitï¿½ (Gravity)
     g=[0 0 -9.81]';
 
     %% get rid of the 6DOF joint
@@ -64,12 +64,12 @@ for num_fil = 1:numel(AnalysisParameters.filename)
     
     dt=1/freq;
     dq=derivee2(dt,q);  % vitesses
-    ddq=derivee2(dt,dq);  % accélérations
+    ddq=derivee2(dt,dq);  % accï¿½lï¿½rations
     
     nbframe=size(q,1);
 
-    %% Définition des données cinématiques du pelvis
-    % (position / vitesse / accélération / orientation / vitesse angulaire / accélération angulaire)
+    %% Dï¿½finition des donnï¿½es cinï¿½matiques du pelvis
+    % (position / vitesse / accï¿½lï¿½ration / orientation / vitesse angulaire / accï¿½lï¿½ration angulaire)
     % Kinematical data for Pelvis (Position/speed/acceleration/angles/angular speed/angular acceleration)
 
     if isfield(InverseKinematicsResults,'FreeJointCoordinates')
