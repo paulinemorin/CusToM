@@ -1,4 +1,4 @@
-function [Contact_detection] = ContactDetectionAddMarkers(filename, AnalysisParameters, Human_model)
+function [Contact_detection, Num] = ContactDetectionAddMarkers(filename, AnalysisParameters, Human_model)
 % Contact detection for ground reaction forces for unconventional floors requiring additional markers
 %
 %   INPUT
@@ -129,6 +129,8 @@ PositionThreshold = AnalysisParameters.Prediction.PositionThreshold;
 VelocityThreshold = AnalysisParameters.Prediction.VelocityThreshold;
 Offset = AnalysisParameters.Prediction.Offset;
 Width = AnalysisParameters.Prediction.Width;
+DetectionAxis = zeros(3,1);
+%good_X = zeros(3,nbframe);
 for i=1:nbframe
     %attribution à chaque articulation de la position/vitesse/accélération (position/speed/acceleration for each joint)
     Human_model(1).p=p_pelvis(i,:)';
@@ -205,6 +207,10 @@ for i=1:nbframe
         if 0<=abs(position_pred_2(2)) && abs(position_pred_2(2))<=Width && abs(position_pred_2(3))<=PositionThreshold+Offset && difference_vitesse<=VelocityThreshold
             Contact_detection(pred,i)=1;
         end
-    end    
+    end
+    num_proches_markers = unique(num_proches_marker); 
+    Num{i} = num2cell(num_proches_markers);
+    %good_X(:,i) = [good_marker1(i,1)-real_markers(1).position(i,1) good_marker1(i,4)-real_markers(1).position(i,1)];
 end
+
 end

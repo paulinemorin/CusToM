@@ -64,7 +64,7 @@ if AnalysisParameters.Prediction.ContactDetection == 0
 elseif AnalysisParameters.Prediction.ContactDetection == 2
     Contact_detection = ContactDetectionOne(filename, AnalysisParameters);
 elseif AnalysisParameters.Prediction.ContactDetection == 3
-    Contact_detection = ContactDetectionAddMarkers(filename, AnalysisParameters, Human_model);
+    [Contact_detection, Num] = ContactDetectionAddMarkers(filename, AnalysisParameters, Human_model);
 %elseif AnalysisParameters.Prediction.ContactDetection == 4
 %    Contact_detection = Perso(filename, AnalysisParameters);
 end
@@ -249,6 +249,12 @@ for i=1:nbframe
     %% Calcul des efforts extérieurs tels qu’utilisés par la suite pour la dynamique
     %% Computation of external forces for use with dynamics
     external_forces_pred=addForces_Prediction_frame_par_frame(X,external_forces_pred,Prediction,Fmax,i);
+    if AnalysisParameters.Prediction.ContactDetection == 3
+        %Coord = num2cell(good_X(:,i));
+        [external_forces_pred(i).Num_Markers] = Num{i}; % Abscisses des marqueurs en contact par rapport au marqueur origine de la structure
+        [external_forces_pred(i).p1] = Human_model(22).p;
+        [external_forces_pred(i).p2] = Human_model(28).p;
+    end
     
     waitbar(i/nbframe)
 end
