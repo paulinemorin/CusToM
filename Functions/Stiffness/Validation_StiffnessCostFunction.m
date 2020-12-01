@@ -19,7 +19,7 @@ end
 figure
 hold on
 grid on
-plot(0.6:0.1:1,A_avg)
+plot(0:0.1:1,A_avg)
 xlabel('Pourcentage de raideur','FontSize',16);
-ylabel('Moyenne temporelle de la raideur','FontSize',16);
+ylabel('Moyenne temporelle des activations','FontSize',16);
 legend(BiomechanicalModel.Osteoarticular);
