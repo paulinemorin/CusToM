@@ -56,7 +56,7 @@ if ~isempty(intersect({BiomechanicalModel.OsteoArticularModel.name},'root0'))
     BiomechanicalModel.OsteoArticularModel=BiomechanicalModel.OsteoArticularModel(1:end-6);
 end
 
-Nb_frames=1/0.005; %size(torques,2);
+Nb_frames=10000;
 
 %existing muscles
 idm = logical([Muscles.exist]);
@@ -243,15 +243,15 @@ else
         J{i_eff} = Jtemp(:,idxj);
         dJdqtemp= diff2dXdq(effector(i_eff,:), SolidConcerned(i_eff).list, BiomechanicalModel, q(:,i), dp);
         dJdq{i_eff} = dJdqtemp(idxj,:,idxj);
-        [~,fval] = fmincon(@(A) funKtmax(A,BiomechanicalModel,MuscleConcerned(i_eff).list,Fext,Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff}),A0,[],[],[],[],zeros(Nb_muscles,1),ones(Nb_muscles,1),[],options);
+        [Active_max,fval] = fmincon(@(A) funKtmax(A,BiomechanicalModel,MuscleConcerned(i_eff).list,Fext,Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff}),A0,Aeq,beq,[],[],zeros(Nb_muscles,1),ones(Nb_muscles,1),[],options);
         Ktmax = [Ktmax -fval];
-        i_eff=i_eff+1;
+            i_eff=i_eff+1;
     end
     % Optimization
     Amin = zeros(Nb_muscles,1);
     A0 = 0.5*ones(Nb_muscles,1);
     Amax = ones(Nb_muscles,1);
-    [Aopt(:,i)]=AnalysisParameters.Muscles.Costfunction(A0,Aeq,beq, Amin, Amax, [], [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq,J,dJdq, AnalysisParameters.StiffnessPercent, Ktmax);
+    Aopt(:,i)=AnalysisParameters.Muscles.Costfunction(A0,Aeq,beq, Amin, Amax, [], [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq,J,dJdq, AnalysisParameters.StiffnessPercent, Ktmax);
     % Muscular activity
     A0=Aopt(:,1);
     %           A0=randn(size(A0));
@@ -290,7 +290,7 @@ else
             J{i_eff} = Jtemp(:,idxj);
             dJdqtemp= diff2dXdq(effector(i_eff,:), SolidConcerned(i_eff).list, BiomechanicalModel, q(:,i), dp);
             dJdq{i_eff} = dJdqtemp(idxj,:,idxj);
-            [~,fval] = fmincon(@(A) funKtmax(A,BiomechanicalModel,MuscleConcerned(i_eff).list,Fext,Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff}),A0,[],[],[],[],zeros(Nb_muscles,1),ones(Nb_muscles,1),[],options);
+            [Active_max,fval] = fmincon(@(A) funKtmax(A,BiomechanicalModel,MuscleConcerned(i_eff).list,Fext,Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff}),A0,Aeq,beq,[],[],zeros(Nb_muscles,1),ones(Nb_muscles,1),[],options);
             Ktmax = [Ktmax -fval];
             i_eff=i_eff+1;
         end
