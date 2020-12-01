@@ -56,7 +56,7 @@ if ~isempty(intersect({BiomechanicalModel.OsteoArticularModel.name},'root0'))
     BiomechanicalModel.OsteoArticularModel=BiomechanicalModel.OsteoArticularModel(1:end-6);
 end
 
-Nb_frames=1/0.005; %size(torques,2);
+Nb_frames=3,;%1/0.005; %size(torques,2);
 
 %existing muscles
 idm = logical([Muscles.exist]);
@@ -112,8 +112,8 @@ else
     [Fa,Fp]=SimpleMuscleModel(Lm,Vm,Fmax);
 end
 % Solver parameters
-options1 = optimoptions(@fmincon,'Algorithm','sqp','Display','final','GradObj','off','GradConstr','off','TolFun',1e-4,'TolCon',1e-6,'MaxIterations',100000,'MaxFunEvals',100000);
-options2 = optimoptions(@fmincon,'Algorithm','sqp','Display','final','GradObj','off','GradConstr','off','TolFun',1e-4,'TolCon',1e-6,'MaxIterations',100000,'MaxFunEvals',2000000);
+options1 = optimoptions(@fmincon,'Algorithm','sqp','Display','off','GradObj','off','GradConstr','off','TolFun',1e-4,'TolCon',1e-6,'MaxIterations',100000,'MaxFunEvals',100000);
+options2 = optimoptions(@fmincon,'Algorithm','sqp','Display','off','GradObj','off','GradConstr','off','TolFun',1e-4,'TolCon',1e-6,'MaxIterations',100000,'MaxFunEvals',2000000);
 
 
 
@@ -226,7 +226,7 @@ else
     % Joint Torques and Passive force
     beq=torques(idxj,1) - R(idxj,:,1)*Fp(:,1);
     %Ktmax
-    options = optimoptions('fmincon','Algorithm','sqp');
+    options = optimoptions('fmincon','Algorithm','sqp','Display','off',);
     Amin = zeros(Nb_muscles,1);
     A0 = 0.5*ones(Nb_muscles,1);
     Amax = ones(Nb_muscles,1);
@@ -251,7 +251,7 @@ else
     Amin = zeros(Nb_muscles,1);
     A0 = 0.5*ones(Nb_muscles,1);
     Amax = ones(Nb_muscles,1);
-    [Aopt(:,i)]=AnalysisParameters.Muscles.Costfunction(A0,Aeq,beq, Amin, Amax, [], [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq,J,dJdq, AnalysisParameters.StiffnessPercent, Ktmax);
+    [Aopt(:,i)]=AnalysisParameters.Muscles.Costfunction(A0,Aeq,beq, Amin, Amax, options1, [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq,J,dJdq, AnalysisParameters.StiffnessPercent, Ktmax);
     % Muscular activity
     A0=Aopt(:,1);
     %           A0=randn(size(A0));
@@ -298,7 +298,7 @@ else
         Amin = zeros(Nb_muscles,1);
         A0 = 0.5*ones(Nb_muscles,1);
         Amax = ones(Nb_muscles,1);
-        [Aopt(:,i)]=AnalysisParameters.Muscles.Costfunction(A0,Aeq,beq, Amin, Amax, [], [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq,J,dJdq, AnalysisParameters.StiffnessPercent, Ktmax);
+        [Aopt(:,i)]=AnalysisParameters.Muscles.Costfunction(A0,Aeq,beq, Amin, Amax, options2, [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq,J,dJdq, AnalysisParameters.StiffnessPercent, Ktmax);
         %[Aopt(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options2, AnalysisParameters.Muscles.CostfunctionOptions, Fa(:,i), Fmax);
         % Muscular activity
         
