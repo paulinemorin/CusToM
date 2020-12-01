@@ -57,7 +57,7 @@ acq = btkReadAcquisition(AnalysisParameters.Prediction.ReferenceFile);
 markers = btkGetMarkers(acq);
 markers_list = fieldnames(markers);
 nbr_markers = length(markers_list);
-[real_markers, nbframe]=C3dProcessedData(filename, markers_list);
+[real_markers, nbframe]=C3dProcessedData(filename, markers_list); %Dernier marqueur --> pour créer Y2
 real_markers = rmfield(real_markers,'time');
 
 % Filtrage (Filtering)
@@ -123,13 +123,9 @@ dw=derivee2(dt,w);
 good_marker1=zeros(nbframe,6); % Coordonnées des marqueurs à chaque extrémité de la surface de contact pour chaque frame dans le repère monde
 good_marker2=zeros(nbframe,6); % Coordonnées des marqueurs à chaque extrémité de la surface de contact pour chaque frame dans le repère mobile
 vitesse_good_marker=zeros(nbframe,3); % Vitesses selon les axes X/Y/Z de l'origine du repère mobile exprimé dans le repère monde
-X2=zeros(nbframe,3); % Premier axe du repere mobile
-theta=zeros(nbframe,1); % Angle entre X2 et Y2 (repère mobile)
 PositionThreshold = AnalysisParameters.Prediction.PositionThreshold;
 VelocityThreshold = AnalysisParameters.Prediction.VelocityThreshold;
 Offset = AnalysisParameters.Prediction.Offset;
-Width = AnalysisParameters.Prediction.Width;
-DetectionAxis = zeros(3,1);
 %good_X = zeros(3,nbframe);
 for i=1:nbframe
     %attribution à chaque articulation de la position/vitesse/accélération (position/speed/acceleration for each joint)
@@ -149,6 +145,7 @@ for i=1:nbframe
     %% Calcul dun nouveau référentiel
     proches_marker=[]; % Matrice contenant tous les marqueurs de la structure correpondant à la surface de contact avec le pied
     num_proches_marker=[]; % Vecteur contenant les numéros des marqueurs de la structure en contact pour chaque point de contact
+    distance = zeros(NbPointsPrediction,1); % Vecteur contenant les distances entre les marqueurs retenus et les point de contact considérés
     for pred = 1:NbPointsPrediction
         %Position et vitesse selon les axes X/Y/Z de chaque point de contact dans le repère monde à la frame i
         Prediction(pred).px(i)=Prediction(pred).pos_anim(1);
@@ -157,54 +154,76 @@ for i=1:nbframe
         Prediction(pred).vx(i)=Prediction(pred).vitesse(1);
         Prediction(pred).vy(i)=Prediction(pred).vitesse(2);
         Prediction(pred).vz(i)=Prediction(pred).vitesse(3);
-        distance_X=abs(Prediction(pred).px(i)-real_markers(1).position(i,1));
+        
+        DetectionAxis = real_markers(end-1).position(i,:)-real_markers(1).position(i,:); %Détection selon l'axe de la structure
+        ContactPoint = [Prediction(pred).px(i) Prediction(pred).py(i) Prediction(pred).pz(i)]; %Position absolue du point de contact considéré
+        vect1 = ContactPoint-real_markers(1).position(i,:); %Vecteur entre le point de contact et le premier marqueur
+        distance(1) = dot(vect1,DetectionAxis)/norm(DetectionAxis);
+        
+        %distance_X=abs(Prediction(pred).px(i)-real_markers(1).position(i,1));
         good_marker_provisoire=real_markers(1).position(i,1:3); 
-           for k =2:nbr_markers %Recherche du marqueur de la structure le plus proche selon X pour chaque point de prediction
-               if abs(Prediction(pred).px(i)-real_markers(k).position(i,1))<distance_X
-                   distance_X=abs(Prediction(pred).px(i)-real_markers(k).position(i,1));
+           for k =2:nbr_markers-1 %Recherche du marqueur de la structure le plus proche selon DetectionAxis pour chaque point de prediction
+               %if abs(Prediction(pred).px(i)-real_markers(k).position(i,1))<distance
+               vect = ContactPoint-real_markers(k).position(i,:);
+               test = distance(distance ~= 0);
+               if abs(dot(vect,DetectionAxis)/norm(DetectionAxis))<min(test)
+                   %distance_X=abs(Prediction(pred).px(i)-real_markers(k).position(i,1));
+                   distance(pred) = dot(vect,DetectionAxis)/norm(DetectionAxis);
                    good_marker_provisoire=real_markers(k).position(i,1:3); %Coordonnées X/Y/Z du marqueur repéré
                    num_good_marker_provisoire=k;
                end
            end
            proches_marker=[proches_marker;good_marker_provisoire]; % Coordonnées X/Y/Z (colonnes) de l'ensemble des marqueurs (lignes) en contact
            num_proches_marker=[num_proches_marker;num_good_marker_provisoire];  
-    end
+    end    
     
-    %Construction de la surface de contact en prenant les deux marqueurs les plus éloignés selon l'axe X
-    min_x=proches_marker(1,1);
-    max_x=proches_marker(1,1);
-    no_min_x=1;
-    no_max_x=1;
-    num_good_marker=num_proches_marker(1); %Numéro du marqueur correspondant à l'origine du repère mobile
-    for u=2:numel(proches_marker(:,1))
-        if proches_marker(u,1)<min_x
-            min_x=proches_marker(u,1);
-            no_min_x=u;
-            num_good_marker=num_proches_marker(u);
-        end
-        if proches_marker(u,1)>max_x
-            max_x=proches_marker(u,1);
-            no_max_x=u;
-        end
-    end
-    good_marker1(i,:)=[proches_marker(no_min_x,:) proches_marker(no_max_x,:)]; %Surface de contact définie par les deux marqueurs extrêmes précédents
+%     %Construction de la surface de contact en prenant les deux marqueurs les plus éloignés selon l'axe X
+%     min_x=proches_marker(1,1);
+%     max_x=proches_marker(1,1);
+%     no_min_x=1;
+%     no_max_x=1;
+%     num_good_marker=num_proches_marker(1); %Numéro du marqueur correspondant à l'origine du repère mobile
+%     for u=2:numel(proches_marker(:,1))
+%         if proches_marker(u,1)<min_x
+%             min_x=proches_marker(u,1);
+%             no_min_x=u;
+%             num_good_marker=num_proches_marker(u);
+%         end
+%         if proches_marker(u,1)>max_x
+%             max_x=proches_marker(u,1);
+%             no_max_x=u;
+%         end
+%     end
+
+    [~,ind_min] = min(distance);
+    [~,ind_max] = max(distance);
+    good_marker1(i,:)=[proches_marker(ind_min,:) proches_marker(ind_max,:)]; %Surface de contact définie par les deux marqueurs extrêmes précédents
+    num_good_marker = num_proches_marker(ind_max);
     if i~=1
         vitesse_good_marker(i,:)=(real_markers(num_good_marker).position(i,1:3)-real_markers(num_good_marker).position(i-1,1:3))/(1/freq);
     end
-    X2(i,:)=good_marker1(i,4:6)-good_marker1(i,1:3); %Axe X2 orienté par les deux marqueurs aux extremités de la surface de contact considérée
-    X2(i,:)=X2(i,:)/sqrt(X2(i,1)^2+X2(i,2)^2+X2(i,3)^2); %Axe X2 normé
+    X2=good_marker1(i,4:6)-good_marker1(i,1:3); %Axe X2 orienté par les deux marqueurs aux extremités de la surface de contact considérée
+    X2=X2/norm(X2); 
+    Y2 = real_markers(end).position(i,:)-real_markers(end-1).position(i,:); %Axe Y2 à partir de la position du premier marqueur
+    width = norm(Y2);
+    Y2 = Y2/width;
+    Z2 = cross(X2,Y2);
+    Z2 = Z2/norm(Z2);
+    R21 = [X2' Y2' Z2'];
+    T21 = [R21' -R21'*good_marker1(i,1:3)' ; 0 0 0 1];
     %Axe Y2 parallèle à l'axe Y (repère monde), on considère une seule rotation permise pour la structure autour de Y = Y2 (mouvement plan)
-    theta(i)=-acos(dot(X2(i,:),[1;0;0])); %Angle de rotation de la structure autour de l'axe Y=Y2 à la frame i
-    R12=[cos(theta(i)) 0 sin(theta(i));0 1 0;-sin(theta(i)) 0 cos(theta(i))]; %Matrice de rotation du repère monde au repère mobile à la frame i
-    good_marker2(i,1:3)=R12*(-good_marker1(i,1:3))';
-    T12=[cos(theta(i)) 0 sin(theta(i)) good_marker2(i,1);0 1 0 good_marker2(i,2);-sin(theta(i)) 0 cos(theta(i)) good_marker2(i,3);0 0 0 1]; %Matrice de transformation du repère monde au repère mobile
+    %theta(i)=-acos(dot(X2(i,:),[1;0;0])); %Angle de rotation de la structure autour de l'axe Y=Y2 à la frame i
+    %theta=-acos(dot(X2,[1;0;0])); %Angle de rotation de la structure autour de l'axe Y=Y2 à la frame i
+    %R12=[cos(theta) 0 sin(theta);0 1 0;-sin(theta) 0 cos(theta)]; %Matrice de rotation du repère monde au repère mobile à la frame i
+    %good_marker2(i,1:3)=R12*(-good_marker1(i,1:3))';
+    %T12=[cos(theta) 0 sin(theta) good_marker2(i,1);0 1 0 good_marker2(i,2);-sin(theta) 0 cos(theta) good_marker2(i,3);0 0 0 1]; %Matrice de transformation du repère monde au repère mobile
     
 %% Threshold application
     for pred=1:NbPointsPrediction
-        position_pred_2=T12*[Prediction(pred).px(i);Prediction(pred).py(i);Prediction(pred).pz(i);1]; %Position relative du point de contact par rapport à la structure
-        difference_vitesse=sqrt((vitesse_good_marker(i,1)-Prediction(pred).vx(i))^2+(vitesse_good_marker(i,2)-Prediction(pred).vy(i))+(vitesse_good_marker(i,3)-Prediction(pred).vz(i))); %Norme de la vitesse relative du point de contact par rapport à la structure
+        position_pred_2=T21*[Prediction(pred).px(i);Prediction(pred).py(i);Prediction(pred).pz(i);1]; %Position relative du point de contact par rapport à la structure
+        difference_vitesse=sqrt((vitesse_good_marker(i,1)-Prediction(pred).vx(i))^2+(vitesse_good_marker(i,2)-Prediction(pred).vy(i))^2+(vitesse_good_marker(i,3)-Prediction(pred).vz(i))^2); %Norme de la vitesse relative du point de contact par rapport à la structure
 
-        if 0<=abs(position_pred_2(2)) && abs(position_pred_2(2))<=Width && abs(position_pred_2(3))<=PositionThreshold+Offset && difference_vitesse<=VelocityThreshold
+        if 0<=position_pred_2(2) && position_pred_2(2)<=width && abs(position_pred_2(3))<=PositionThreshold+Offset && difference_vitesse<=VelocityThreshold
             Contact_detection(pred,i)=1;
         end
     end
