@@ -50,13 +50,13 @@ load([filename '/InverseDynamicsResults']) %#ok<LOAD>
 q=InverseKinematicsResults.JointCoordinates;
 torques =InverseDynamicsResults.JointTorques;
 
-
 Nb_q=size(q,1);
-Nb_frames= 100%size(torques,2);
 
 if ~isempty(intersect({BiomechanicalModel.OsteoArticularModel.name},'root0'))
     BiomechanicalModel.OsteoArticularModel=BiomechanicalModel.OsteoArticularModel(1:end-6);
 end
+
+Nb_frames=1/0.005; %size(torques,2);
 
 %existing muscles
 idm = logical([Muscles.exist]);
@@ -204,14 +204,14 @@ else
     %Effectors : Solids RFOOT (22), LFOOT (28) and markers anat_position RTOE (3), LTOE (3)
     i_eff = 1;
     for solid_eff=effector(:,1)' %among the effector solids
-        if solid_eff == 29 %RHand (35)
+        if solid_eff == 29 %RHand (29)
             SolidConcerned_eff = find_solid_path(BiomechanicalModel.OsteoArticularModel,solid_eff,7); %list of solids between solid_eff and Thorax (7)
-        elseif (solid_eff==22) || (solid_eff == 28) %RFoot (22) or LFoot (28)
-            SolidConcerned_eff = find_solid_path(BiomechanicalModel.OsteoArticularModel,solid_eff,1); %list of solids between solid_eff and PelvisSacrum (1)
+%         elseif (solid_eff==22) || (solid_eff == 28) %RFoot (22) or LFoot (28)
+%             SolidConcerned_eff = find_solid_path(BiomechanicalModel.OsteoArticularModel,solid_eff,1); %list of solids between solid_eff and PelvisSacrum (1)
         end
         MuscleConcerned_eff = []; %construction of MuscleConcerned
         for i=1:Nb_muscles
-            if ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(1),SolidConcerned_eff)) && ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(end),SolidConcerned_eff)) %verifying that the first
+            if ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(1),SolidConcerned_eff)) || ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(end),SolidConcerned_eff)) %verifying that the first
                 %and last solids connected to the muscle belong to
                 %SolidConcerned_eff
                 MuscleConcerned_eff = [MuscleConcerned_eff i];
@@ -323,9 +323,7 @@ else
     MuscleForcesComputationResults.MuscleForces(idm,:) = Fopt;
     MuscleForcesComputationResults.MuscleLengths= Lmt;
     MuscleForcesComputationResults.MuscleLeverArm = R;
-    MuscleForcesComputationResults.TaskStiffness = Kt;
-    
-    
+    MuscleForcesComputationResults.TaskStiffness = Kt;    
     close(h)
     
     disp(['... Forces Computation (' filename ') done'])

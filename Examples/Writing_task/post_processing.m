@@ -64,11 +64,6 @@ for k=1:length(nom_musclesEMG)
     xlabel("temps (s)")
 end
 
-
-
-
-
-
 % for k=1:length(CusMuscles)
 %     R=corrcoef(RMS_EMG(1:10:end,k),EMG_Cus(:,k));
 %     Rfin(k)=R(1,2);

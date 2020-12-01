@@ -1,5 +1,5 @@
 function Kt = TaskStiffness(BiomechanicalModel,MuscleConcerned,Fext,FMT,R,dRdq,J,dJdq)
-%This function returns the task stiffness 
+%This function returns the task stiffness
 %Based on:
 % R�f�rence Stanev : Stanev, D., & Moustakas, K. (2019). Stiffness modulation of redundant musculoskeletal systems. Journal of Biomechanics, 85, 101�107. https://doi.org/10.1016/j.jbiomech.2019.01.017
 %INPUT :
