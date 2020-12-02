@@ -10,6 +10,7 @@ alpha_l=0:0.1:1;
 A_avg=zeros(Nb_muscles,numel(alpha_l));
 i=1;
 for alpha=alpha_l
+    alpha
     AnalysisParameters.StiffnessPercent=alpha;
     MuscleForcesComputationResults = ForcesComputationOptiNum(filename,BiomechanicalModel, AnalysisParameters);
     save(['MuscleForcesComputationResults_', num2str(alpha),'.mat'], 'MuscleForcesComputationResults')

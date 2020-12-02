@@ -56,11 +56,15 @@ if ~isempty(intersect({BiomechanicalModel.OsteoArticularModel.name},'root0'))
     BiomechanicalModel.OsteoArticularModel=BiomechanicalModel.OsteoArticularModel(1:end-6);
 end
 
-Nb_frames=3,;%1/0.005; %size(torques,2);
+Nb_frames=10000;%1/0.005; %size(torques,2);
 
 %existing muscles
 idm = logical([Muscles.exist]);
 Nb_muscles=numel(Muscles(idm));
+
+if ~isempty(intersect({BiomechanicalModel.OsteoArticularModel.name},'root0'))
+    BiomechanicalModel.OsteoArticularModel=BiomechanicalModel.OsteoArticularModel(1:end-6);
+end
 
 %% computation of muscle moment arms from joint posture
 L0=ones(Nb_muscles,1);
@@ -97,7 +101,7 @@ idxj=23:29;
 % Optimisation parameters
 
 Amin = zeros(Nb_muscles,1);
-A0a  = zeros(Nb_muscles,1);
+A0  = zeros(Nb_muscles,1);
 for i=1:size(idm,2)
     Muscles(i).f0 = 100*Muscles(i).f0;
 end
@@ -226,7 +230,7 @@ else
     % Joint Torques and Passive force
     beq=torques(idxj,1) - R(idxj,:,1)*Fp(:,1);
     %Ktmax
-    options = optimoptions('fmincon','Algorithm','sqp','Display','off',);
+    options = optimoptions('fmincon','Algorithm','sqp','Display','off');
     Amin = zeros(Nb_muscles,1);
     A0 = 0.5*ones(Nb_muscles,1);
     Amax = ones(Nb_muscles,1);
