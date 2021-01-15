@@ -57,8 +57,25 @@ acq = btkReadAcquisition(AnalysisParameters.Prediction.ReferenceFile);
 markers = btkGetMarkers(acq);
 markers_list = fieldnames(markers);
 nbr_markers = length(markers_list);
-[real_markers, nbframe]=C3dProcessedData(filename, markers_list); %Dernier marqueur --> pour créer Y2
-real_markers = rmfield(real_markers,'time');
+[real_markers_unsorted, nbframe]=C3dProcessedData(filename, markers_list); %Dernier marqueur --> pour créer Y2
+real_markers_unsorted = rmfield(real_markers_unsorted,'time');
+
+%Tri des marqueurs (Marqueurs dans l'ordre croissant selon l'axe priviliégié X2 puis marqueur pour créer Y2)
+real_markers = real_markers_unsorted;
+no_num = 0;
+for index = 1:length(real_markers)
+    name = char(real_markers(index).name);
+    num_loc = (name > 'A');
+    if all(num_loc==0)==1
+       no_num = no_num + 1; 
+    end
+    if no_num > 1
+        error('Labeling error (only 2 markers to form perpendicular axis with names without any number)')
+    end
+    loc_end = find(num_loc,1,'last');
+    num = str2num(name(loc_end+1:end));
+    real_markers(num) = real_markers_unsorted(index);
+end
 
 % Filtrage (Filtering)
 f_cut = AnalysisParameters.Prediction.FilterCutOff;
@@ -120,7 +137,7 @@ dw=derivee2(dt,w);
 
 
 %% Calcul frame par frame de la position, vitesse, accélération des deux repères
-good_marker1=zeros(nbframe,6); % Coordonnées des marqueurs à chaque extrémité de la surface de contact pour chaque frame dans le repère monde
+good_marker=zeros(nbframe,6); % Coordonnées des marqueurs à chaque extrémité de la surface de contact pour chaque frame dans le repère monde
 vitesse_good_marker=zeros(nbframe,3); % Vitesses selon les axes X/Y/Z de l'origine du repère mobile exprimé dans le repère monde
 PositionThreshold = AnalysisParameters.Prediction.PositionThreshold;
 VelocityThreshold = AnalysisParameters.Prediction.VelocityThreshold;
@@ -142,9 +159,6 @@ for i=1:nbframe
     % Calcul positions / vitesses / accélération de chaque solide (computation of position/speed/acceleration for each solid)
     [Human_model,Prediction] = ForwardAllKinematicsPrediction(Human_model,Prediction,1); 
     %% Calcul dun nouveau référentiel
-    proches_marker=[]; % Matrice contenant tous les marqueurs de la structure correpondant à la surface de contact avec le pied
-    num_proches_marker=[]; % Vecteur contenant les numéros des marqueurs de la structure en contact pour chaque point de contact
-    distance = zeros(NbPointsPrediction,1); % Vecteur contenant les distances entre les marqueurs retenus et les point de contact considérés
     for pred = 1:NbPointsPrediction
         %Position et vitesse selon les axes X/Y/Z de chaque point de contact dans le repère monde à la frame i
         Prediction(pred).px(i)=Prediction(pred).pos_anim(1);
@@ -153,42 +167,73 @@ for i=1:nbframe
         Prediction(pred).vx(i)=Prediction(pred).vitesse(1);
         Prediction(pred).vy(i)=Prediction(pred).vitesse(2);
         Prediction(pred).vz(i)=Prediction(pred).vitesse(3);
-        
-        DetectionAxis = real_markers(end-1).position(i,:)-real_markers(1).position(i,:); %Détection selon l'axe de la structure
-        ContactPoint = [Prediction(pred).px(i) Prediction(pred).py(i) Prediction(pred).pz(i)]; %Position absolue du point de contact considéré
-        vect1 = ContactPoint-real_markers(1).position(i,:); %Vecteur entre le point de contact et le premier marqueur
-        distance(pred) = dot(vect1,DetectionAxis)/norm(DetectionAxis);
-        
-        good_marker_provisoire=real_markers(1).position(i,1:3); 
-           for k =2:nbr_markers-1 %Recherche du marqueur de la structure le plus proche selon DetectionAxis pour chaque point de prediction
-               vect = ContactPoint-real_markers(k).position(i,:);
-               if abs(dot(vect,DetectionAxis)/norm(DetectionAxis))<distance(pred)
-                   distance(pred) = dot(vect,DetectionAxis)/norm(DetectionAxis);
-                   good_marker_provisoire=real_markers(k).position(i,1:3); %Coordonnées X/Y/Z du marqueur repéré
-                   num_good_marker_provisoire=k;
-               end
-           end
-           proches_marker=[proches_marker;good_marker_provisoire]; % Coordonnées X/Y/Z (colonnes) de l'ensemble des marqueurs (lignes) en contact
-           num_proches_marker=[num_proches_marker;num_good_marker_provisoire];  
-    end    
-    
-    [~,ind_min] = min(distance);
-    [~,ind_max] = max(distance);
-    good_marker1(i,:)=[proches_marker(ind_min,:) proches_marker(ind_max,:)]; %Surface de contact définie par les deux marqueurs extrêmes précédents
-    num_good_marker = num_proches_marker(ind_max);
-    if i~=1
-        vitesse_good_marker(i,:)=(real_markers(num_good_marker).position(i,1:3)-real_markers(num_good_marker).position(i-1,1:3))/(1/freq);
     end
-    X2=good_marker1(i,4:6)-good_marker1(i,1:3); %Axe X2 orienté par les deux marqueurs aux extremités de la surface de contact considérée
-    X2=X2/norm(X2); 
-    Y2 = real_markers(end).position(i,:)-real_markers(end-1).position(i,:); %Axe Y2 à partir de la position du premier marqueur
-    width = norm(Y2);
-    Y2 = Y2/width;
+    if length(real_markers) == 3 %Cas pour les solides rigides
+        num_proches_marker = 1;
+        num_good_marker = 1;
+        good_marker(i,1:3) = real_markers(1).position(i,:);
+        X2 = real_markers(1).position(i,:)-real_markers(2).position(i,:); 
+        X2=X2/norm(X2);
+        distance_lastMarker = norm(real_markers(end).position(i,:)-real_markers(end-1).position(i,:));
+        distance_firstMarker = norm(real_markers(end).position(i,:)-real_markers(1).position(i,:));
+        if distance_lastMarker > distance_firstMarker
+            Y2 = real_markers(end).position(i,:)-real_markers(1).position(i,:);
+        else
+            Y2 = real_markers(end).position(i,:)-real_markers(end-1).position(i,:);
+        end
+        width = norm(Y2);
+        Y2 = Y2/width;
+    else % Cas des solides déformables (La distance entre les marqueurs doit être de 20cm minimum)
+        proches_marker=[]; % Matrice contenant tous les marqueurs de la structure correpondant à la surface de contact avec le pied
+        num_proches_marker=[]; % Vecteur contenant les numéros des marqueurs de la structure en contact pour chaque point de contact
+        distance = zeros(NbPointsPrediction,1); % Vecteur contenant les distances entre les marqueurs retenus et les point de contact considérés
+        for pred = 1:NbPointsPrediction            
+            DetectionAxis = real_markers(end-1).position(i,:)-real_markers(1).position(i,:); %Détection selon l'axe de la structure
+            ContactPoint = [Prediction(pred).px(i) Prediction(pred).py(i) Prediction(pred).pz(i)]; %Position absolue du point de contact considéré
+            vect1 = ContactPoint-real_markers(1).position(i,:); %Vecteur entre le point de contact et le premier marqueur
+            distance(pred) = dot(vect1,DetectionAxis)/norm(DetectionAxis);
+            good_marker_provisoire=real_markers(1).position(i,1:3);
+            num_good_marker_provisoire = 1;
+            for k =2:nbr_markers-1 %Recherche du marqueur de la structure le plus proche selon DetectionAxis pour chaque point de prediction
+                vect = ContactPoint-real_markers(k).position(i,:);
+                if abs(dot(vect,DetectionAxis)/norm(DetectionAxis))<distance(pred)
+                    distance(pred) = dot(vect,DetectionAxis)/norm(DetectionAxis);
+                    good_marker_provisoire=real_markers(k).position(i,1:3); %Coordonnées X/Y/Z du marqueur repéré
+                    num_good_marker_provisoire=k;
+                end
+            end
+            proches_marker=[proches_marker;good_marker_provisoire]; % Coordonnées X/Y/Z (colonnes) de l'ensemble des marqueurs (lignes) en contact
+            num_proches_marker=[num_proches_marker;num_good_marker_provisoire];
+        end
+        
+%         [~,ind_min] = min(distance);
+%         [~,ind_max] = max(distance);
+        [num_min,ind_min] = min(num_proches_marker);
+        [num_good_marker,ind_max] = max(num_proches_marker);
+        if num_min == num_good_marker;
+            error('Not enough markers on deformation axis. Maximum distance between 2 markers on this axis = 20cm')
+        else
+            good_marker(i,:)=[proches_marker(ind_min,:) proches_marker(ind_max,:)]; %Surface de contact définie par les deux marqueurs extrêmes précédents
+            X2=good_marker(i,4:6)-good_marker(i,1:3); %Axe X2 orienté par les deux marqueurs aux extremités de la surface de contact considérée
+            X2=X2/norm(X2);
+            distance_lastMarker = norm(real_markers(end).position(i,:)-real_markers(end-1).position(i,:));
+            distance_firstMarker = norm(real_markers(end).position(i,:)-real_markers(1).position(i,:));
+            if distance_lastMarker > distance_firstMarker
+                Y2 = real_markers(end).position(i,:)-real_markers(1).position(i,:);
+            else
+                Y2 = real_markers(end).position(i,:)-real_markers(end-1).position(i,:); %Axe Y2 à partir de la position du premier marqueur
+            end
+            width = norm(Y2);
+            Y2 = Y2/width;
+        end
+    end
     Z2 = cross(X2,Y2);
     Z2 = Z2/norm(Z2);
     R21 = [X2' Y2' Z2'];
-    T21 = [R21' -R21'*good_marker1(i,1:3)' ; 0 0 0 1]; %Matrice de transformation du repère monde au repère mobile
-    
+    T21 = [R21' -R21'*good_marker(i,1:3)' ; 0 0 0 1]; %Matrice de transformation du repère monde au repère mobile
+    if i~=1
+        vitesse_good_marker(i,:)=(real_markers(num_good_marker).position(i,1:3)-real_markers(num_good_marker).position(i-1,1:3))/(1/freq);
+    end
 %% Threshold application
     for pred=1:NbPointsPrediction
         position_pred_2=T21*[Prediction(pred).px(i);Prediction(pred).py(i);Prediction(pred).pz(i);1]; %Position relative du point de contact par rapport à la structure

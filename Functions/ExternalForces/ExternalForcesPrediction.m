@@ -59,14 +59,19 @@ NbPointsPrediction = numel(Prediction);
 
 if AnalysisParameters.Prediction.ContactDetection == 0
     Contact_detection = ContactDetectionThreshold(filename, AnalysisParameters, Human_model);
-%elseif AnalysisParameters.Prediction.ContactDetection == 1
+elseif AnalysisParameters.Prediction.ContactDetection == 1
+%     error('Unavailable function')
 %    Contact_detection = ContactDetectionAutomaticThreshold(filename, AnalysisParameters, BiomechanicalModel);
 elseif AnalysisParameters.Prediction.ContactDetection == 2
     Contact_detection = ContactDetectionOne(filename, AnalysisParameters);
 elseif AnalysisParameters.Prediction.ContactDetection == 3
     [Contact_detection, Num] = ContactDetectionAddMarkers(filename, AnalysisParameters, Human_model);
-%elseif AnalysisParameters.Prediction.ContactDetection == 4
-%    Contact_detection = Perso(filename, AnalysisParameters);
+elseif AnalysisParameters.Prediction.ContactDetection == 4
+%     error('Unavailable function')
+elseif AnalysisParameters.Prediction.ContactDetection == 5
+%     error('Unavailable function')
+elseif AnalysisParameters.Prediction.ContactDetection == 6
+    Contact_detection = ContactDetectionMatrixGiven(filename, AnalysisParameters);
 end
 
 %% Gravity
