@@ -57,7 +57,7 @@ acq = btkReadAcquisition(AnalysisParameters.Prediction.ReferenceFile);
 markers = btkGetMarkers(acq);
 markers_list = fieldnames(markers);
 nbr_markers = length(markers_list);
-[real_markers_unsorted, nbframe]=C3dProcessedData(filename, markers_list); %Dernier marqueur --> pour créer Y2
+[real_markers_unsorted, nbframe]=C3dProcessedData(filename, markers_list);
 real_markers_unsorted = rmfield(real_markers_unsorted,'time');
 
 %Tri des marqueurs (Marqueurs dans l'ordre croissant selon l'axe priviliégié X2 puis marqueur pour créer Y2)
@@ -206,8 +206,6 @@ for i=1:nbframe
             num_proches_marker=[num_proches_marker;num_good_marker_provisoire];
         end
         
-%         [~,ind_min] = min(distance);
-%         [~,ind_max] = max(distance);
         [num_min,ind_min] = min(num_proches_marker);
         [num_good_marker,ind_max] = max(num_proches_marker);
         if num_min == num_good_marker;
