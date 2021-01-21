@@ -1,4 +1,4 @@
-function [R] = MomentArmsComputationNum(BiomechanicalModel,qval,dp)
+function [R] = MomentArmsComputationNumMuscleJoint(BiomechanicalModel,qval,dp,nummuscle,numarti)
 % Computation of the moment arms matrix (numerical version)
 %
 %   INPUT
@@ -21,60 +21,25 @@ function [R] = MomentArmsComputationNum(BiomechanicalModel,qval,dp)
 Human_model=BiomechanicalModel.OsteoArticularModel;
 Muscles=BiomechanicalModel.Muscles;
 % nq=numel(qval);
-<<<<<<< HEAD
-=======
-
->>>>>>> Dev_master
-idxm=find([Muscles.exist]);
-nmr=numel(idxm);
-
-
 %
-if length(qval)==numel(BiomechanicalModel.OsteoArticularModel(:)) && ~isempty(intersect({BiomechanicalModel.OsteoArticularModel.name},'root0'))
+if length(qval)==numel(BiomechanicalModel.OsteoArticularModel(:)) && ~isempty(intersect({BiomechanicalModel.OsteoArticularModel.name},'root0'))  
     q=qval(1:end-6); %only degrees of freedom of the body, not the floating base.
 else
     q=qval;
 end
-
-<<<<<<< HEAD
-if isfield('Coupling', BiomechanicalModel)
-    C=BiomechanicalModel.Coupling;
-else 
-    C = ones(nmr,length(q));
-end
-
-=======
-if isfield(BiomechanicalModel,'Coupling')
-    C=BiomechanicalModel.Coupling;
-else
-    C= ones(nmr,length(q));
-end
-[row,col] = find(C);
->>>>>>> Dev_master
-
 %% Computation of moment arms
-R=zeros(nmr,length(q));%init R
+R=zeros(length(numarti));%init R
 
-for k=1:length(row)
-    i = col(k); % q indice
+for i=1:length(numarti)
     dq=zeros(length(q),1); %differentiation step vector
-    dq(i)=dp;
-    
-    Lpdq=zeros(nmr,1);
-    Lmdq=zeros(nmr,1);
-    j= row(k) ; % muscle indice 
+    dq(numarti(i))=dp;
     % compute the length of the muscle at q+dq
-    Lpdq(j) = Muscle_lengthNum(Human_model,Muscles(idxm(j)),q+dq);
+    Lpdq = Muscle_lengthNum(Human_model,Muscles(nummuscle),q+dq);
     % compute the length of the muscle at q-dq
-    Lmdq(j) = Muscle_lengthNum(Human_model,Muscles(idxm(j)),q-dq);
+    Lmdq = Muscle_lengthNum(Human_model,Muscles(nummuscle),q-dq);
 
-    R(:,i)=(-Lpdq+Lmdq)/(2*dp); % it is -dl/dq
+    R(i)=(-Lpdq+Lmdq)/(2*dp); % it is -dl/dq
 end
-% beware that the matrix is finally nq*nm
-R=R';
-
-
-
 
 
 end
