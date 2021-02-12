@@ -139,6 +139,7 @@ dw=derivee2(dt,w);
 %% Calcul frame par frame de la position, vitesse, accélération des deux repères
 good_marker=zeros(nbframe,6); % Coordonnées des marqueurs à chaque extrémité de la surface de contact pour chaque frame dans le repère monde
 vitesse_good_marker=zeros(nbframe,3); % Vitesses selon les axes X/Y/Z de l'origine du repère mobile exprimé dans le repère monde
+T21 = zeros(4,4,nbframe);
 PositionThreshold = AnalysisParameters.Prediction.PositionThreshold;
 VelocityThreshold = AnalysisParameters.Prediction.VelocityThreshold;
 Offset = AnalysisParameters.Prediction.Offset;
@@ -171,7 +172,7 @@ for i=1:nbframe
     if length(real_markers) == 3 %Cas pour les solides rigides
         num_proches_marker = 1;
         num_good_marker = 1;
-        good_marker(i,1:3) = real_markers(1).position(i,:);
+        O2 = real_markers(1).position(i,:);
         X2 = real_markers(1).position(i,:)-real_markers(2).position(i,:); 
         X2=X2/norm(X2);
         distance_lastMarker = norm(real_markers(end).position(i,:)-real_markers(end-1).position(i,:));
@@ -183,7 +184,7 @@ for i=1:nbframe
         end
         width = norm(Y2);
         Y2 = Y2/width;
-    else % Cas des solides déformables (La distance entre les marqueurs doit être de 20cm minimum)
+    else % Cas des solides déformables (La distance entre les marqueurs doit être de 20cm maximum)
         proches_marker=[]; % Matrice contenant tous les marqueurs de la structure correpondant à la surface de contact avec le pied
         num_proches_marker=[]; % Vecteur contenant les numéros des marqueurs de la structure en contact pour chaque point de contact
         distance = zeros(NbPointsPrediction,1); % Vecteur contenant les distances entre les marqueurs retenus et les point de contact considérés
@@ -208,11 +209,12 @@ for i=1:nbframe
         
         [num_min,ind_min] = min(num_proches_marker);
         [num_good_marker,ind_max] = max(num_proches_marker);
-        if num_min == num_good_marker;
+        if num_min == num_good_marker
             error('Not enough markers on deformation axis. Maximum distance between 2 markers on this axis = 20cm')
         else
             good_marker(i,:)=[proches_marker(ind_min,:) proches_marker(ind_max,:)]; %Surface de contact définie par les deux marqueurs extrêmes précédents
-            X2=good_marker(i,4:6)-good_marker(i,1:3); %Axe X2 orienté par les deux marqueurs aux extremités de la surface de contact considérée
+            O2 = good_marker(i,1:3);
+            X2=good_marker(i,4:6)-O2; %Axe X2 orienté par les deux marqueurs aux extremités de la surface de contact considérée
             X2=X2/norm(X2);
             distance_lastMarker = norm(real_markers(end).position(i,:)-real_markers(end-1).position(i,:));
             distance_firstMarker = norm(real_markers(end).position(i,:)-real_markers(1).position(i,:));
@@ -227,14 +229,15 @@ for i=1:nbframe
     end
     Z2 = cross(X2,Y2);
     Z2 = Z2/norm(Z2);
-    R21 = [X2' Y2' Z2'];
-    T21 = [R21' -R21'*good_marker(i,1:3)' ; 0 0 0 1]; %Matrice de transformation du repère monde au repère mobile
+    R12 = [X2' Y2' Z2'];
+    T12 = [R12 O2' ; 0 0 0 1]; 
+    T21(:,:,i) = inv(T12); %Matrice de transformation du repère monde au repère mobile
     if i~=1
         vitesse_good_marker(i,:)=(real_markers(num_good_marker).position(i,1:3)-real_markers(num_good_marker).position(i-1,1:3))/(1/freq);
     end
 %% Threshold application
     for pred=1:NbPointsPrediction
-        position_pred_2=T21*[Prediction(pred).px(i);Prediction(pred).py(i);Prediction(pred).pz(i);1]; %Position relative du point de contact par rapport à la structure
+        position_pred_2=T21(:,:,i)*[Prediction(pred).px(i);Prediction(pred).py(i);Prediction(pred).pz(i);1]; %Position relative du point de contact par rapport à la structure
         difference_vitesse=sqrt((vitesse_good_marker(i,1)-Prediction(pred).vx(i))^2+(vitesse_good_marker(i,2)-Prediction(pred).vy(i))^2+(vitesse_good_marker(i,3)-Prediction(pred).vz(i))^2); %Norme de la vitesse relative du point de contact par rapport à la structure
 
         if 0<=position_pred_2(2) && position_pred_2(2)<=width && abs(position_pred_2(3))<=PositionThreshold+Offset && difference_vitesse<=VelocityThreshold
@@ -244,5 +247,5 @@ for i=1:nbframe
     num_proches_markers = unique(num_proches_marker); 
     Num{i} = num2cell(num_proches_markers);
 end
-
+save([filename '_T21.mat'],'T21');
 end

@@ -149,6 +149,15 @@ X0= 1*zeros(3*NbPointsPrediction,1);
 lb=-ones(3*NbPointsPrediction,1);
 lb(2*NbPointsPrediction+1:3*NbPointsPrediction)=0;
 ub=ones(3*NbPointsPrediction,1);
+% if AnalysisParameters.Prediction.ContactDetection == 3
+%     load([filename '_T21.mat']); %Matrice de passage du repère monde au repère de la plateforme
+%     lb = reshape(lb,[28,3])';
+%     ub = reshape(ub,[28,3])';
+%     lb = inv(T21(1:3,1:3,i))*lb;
+%     ub = inv(T21(1:3,1:3,i))*lb;
+%     lb = reshape(lb,[84,1]);
+%     ub = reshape(ub,[84,1]);
+% end
 lb_init=lb; ub_init=ub;
 
 options = optimoptions(@fmincon,'Algorithm','sqp','Display','off','GradObj','off','GradConstr','off','TolFun',1e-6,'TolX',1e-6);
@@ -219,7 +228,6 @@ for i=1:nbframe
         A(6,k+numel(Prediction))=(Prediction(k).px(i)-p_pelvis(i,1))*Prediction(k).efforts_max(i,2); %px*beta
     end
     
-    
     %% Taking friction into account for every point to point link, |Fx|<0.5|Fz| et |Fy|<0.5|Fz|
     Afric=zeros(4*numel(Prediction),3*numel(Prediction));
     bfric=zeros(4*numel(Prediction),1);
@@ -234,6 +242,10 @@ for i=1:nbframe
         Afric(k+2*numel(Prediction),k+2*numel(Prediction))=-coef_friction*Prediction(k).efforts_max(i,3);
         Afric(k+3*numel(Prediction),k+2*numel(Prediction))=-coef_friction*Prediction(k).efforts_max(i,3);
     end
+    
+%     if AnalysisParameters.Prediction.ContactDetection == 3
+%         Afric = inv(T21(1:3,1:3,i))*Afric;
+%     end
     
     %% Minimizing sum of normalized efforts for each punctual joint while respecting dynamical equations and friction
     X = fmincon(@(X) sum(X.^2),X0,Afric,bfric,A,b,lb,ub,[],options);
