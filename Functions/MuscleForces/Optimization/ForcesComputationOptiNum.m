@@ -56,7 +56,7 @@ if ~isempty(intersect({BiomechanicalModel.OsteoArticularModel.name},'root0'))
     BiomechanicalModel.OsteoArticularModel=BiomechanicalModel.OsteoArticularModel(1:end-6);
 end
 
-Nb_frames=10000;
+Nb_frames=1;
 
 %existing muscles
 idm = logical([Muscles.exist]);
@@ -92,7 +92,7 @@ Lm_norm = Lm./L0;
 Vm = gradient(Lm_norm)*freq;
 
 [idxj,~]=find(sum(R(:,:,1),2)~=0);
-idxj=23:29;
+%idxj=23:29;
 
 % nvR=flechis_extens(2);
 % [idxj,~]=find(sum(nvR,2)~=0);
@@ -204,18 +204,17 @@ if isfield(BiomechanicalModel.OsteoArticularModel,'ClosedLoop') && ~isempty([Bio
     MuscleForcesComputationResults.lambda=Aopt(Nb_muscles+1:indc-1,:);
     
 else
-    effector = [29 2]; %Effector : hand(29) and marker end of hand (2)
+    
+    effector = AnalysisParameters.Muscles.Stiffness.effector;
+    %effector = [29 2]; %Effector : hand(29) and marker end of hand (2)
     %Effectors : Solids RFOOT (22), LFOOT (28) and markers anat_position RTOE (3), LTOE (3)
     i_eff = 1;
     for solid_eff=effector(:,1)' %among the effector solids
-        if solid_eff == 29 %RHand (29)
-            SolidConcerned_eff = find_solid_path(BiomechanicalModel.OsteoArticularModel,solid_eff,7); %list of solids between solid_eff and Thorax (7)
-%         elseif (solid_eff==22) || (solid_eff == 28) %RFoot (22) or LFoot (28)
-%             SolidConcerned_eff = find_solid_path(BiomechanicalModel.OsteoArticularModel,solid_eff,1); %list of solids between solid_eff and PelvisSacrum (1)
-        end
-        MuscleConcerned_eff = []; %construction of MuscleConcerned
+        SolidConcerned_eff = find_solid_path(BiomechanicalModel.OsteoArticularModel,solid_eff,1); 
+         MuscleConcerned_eff = []; %construction of MuscleConcerned
         for i=1:Nb_muscles
-            if ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(1),SolidConcerned_eff)) || ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(end),SolidConcerned_eff)) %verifying that the first
+            if ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(1),SolidConcerned_eff)) && ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(end),SolidConcerned_eff)) 
+                %verifying that the first
                 %and last solids connected to the muscle belong to
                 %SolidConcerned_eff
                 MuscleConcerned_eff = [MuscleConcerned_eff i];
@@ -255,7 +254,7 @@ else
     Amin = zeros(Nb_muscles,1);
     A0 = 0.5*ones(Nb_muscles,1);
     Amax = ones(Nb_muscles,1);
-    Aopt(:,i)=AnalysisParameters.Muscles.Costfunction(A0,Aeq,beq, Amin, Amax, [], [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq,J,dJdq, AnalysisParameters.StiffnessPercent, Ktmax);
+    Aopt(:,i)=AnalysisParameters.Muscles.Costfunction(A0,Aeq,beq, Amin, Amax, [], [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq,J,dJdq, AnalysisParameters.Muscles.Stiffness.alpha, Ktmax);
     % Muscular activity
     A0=Aopt(:,1);
     %           A0=randn(size(A0));
@@ -267,12 +266,19 @@ else
     
     %initialisation
     Kt=cell(numel(effector(:,1)),Nb_frames);
+    Kj=cell(numel(effector(:,1)),Nb_frames);
+    Km=cell(numel(effector(:,1)),Nb_frames);
     FMT = Fopt(:,i);
     i_eff = 1;
     for solid_eff=effector(:,1)'
         Fext = ExtForces(1).fext(solid_eff);
         Fext = Fext.fext(1:3,1); %external forces applied to the solid_eff at the first frame
         Kt(i_eff,i) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,Fext, FMT,R(idxj,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff})};
+        Kj(i_eff,i) ={JointStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list, FMT,R(idxj,:,i),dRdq{i_eff})};
+        km = zeros(length(FMT),1);
+        km(MuscleConcerned(i_eff).list) = 23.4*FMT(MuscleConcerned(i_eff).list)./[BiomechanicalModel.Muscles(MuscleConcerned(i_eff).list).l0]';
+        Km(i_eff,i)  = {diag(km)};
+            
         i_eff = i_eff+1;
     end
     %     MuscleForcesComputationResults.TaskStiffness(1) = {Kt(:,1)};
@@ -319,15 +325,27 @@ else
             Fext = ExtForces(i).fext(solid_eff);
             Fext = Fext.fext(1:3,1); %external forces applied to the solid_eff at the i-frame
             Kt(i_eff,i) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,Fext, FMT,R(idxj,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff})};
+            Kj(i_eff,i) ={JointStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list, FMT,R(idxj,:,i),dRdq{i_eff})};
+            
+            km = zeros(length(FMT),1);
+            km(MuscleConcerned(i_eff).list) = 23.4*FMT(MuscleConcerned(i_eff).list)./[BiomechanicalModel.Muscles(MuscleConcerned(i_eff).list).l0]';
+            Km(i_eff,i)  = {diag(km)};
+            
             i_eff = i_eff+1;
         end
+        
+
+        
     end
     
     MuscleForcesComputationResults.MuscleActivations(idm,:) = Aopt;
     MuscleForcesComputationResults.MuscleForces(idm,:) = Fopt;
     MuscleForcesComputationResults.MuscleLengths= Lmt;
     MuscleForcesComputationResults.MuscleLeverArm = R;
-    MuscleForcesComputationResults.TaskStiffness = Kt;    
+    MuscleForcesComputationResults.Stiffness.TaskStiffness = Kt;    
+    MuscleForcesComputationResults.Stiffness.JointStiffness = Kj;    
+    MuscleForcesComputationResults.Stiffness.MuscleStiffness = Km;    
+    MuscleForcesComputationResults.Stiffness.MuscleConcerned = MuscleConcerned;    
     close(h)
     
     disp(['... Forces Computation (' filename ') done'])

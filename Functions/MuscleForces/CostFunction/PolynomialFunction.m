@@ -37,7 +37,7 @@ function [Aopt] = PolynomialFunction(A0, Aeq, beq, Amin, Amax, fmincon_options, 
 %     ind_act=find(isinf(Amax)); % first element to be infinite in Fmax
 %     cost_function = @(A) sum((Fa./Fmax(1:ind_act-1).*A(1:ind_act-1)).^(options));
 % end
-cost_function2 = @(A) sum((pourcentage_raideur' - Kt_list_eff(BiomechanicalModel,MuscleConcerned,Fext,Fa,A,Fp,R,dRdq,J,dJdq)./Ktmax).^2); % fatigue non prise en compte norm(A)^2 +
+cost_function2 = @(A) sum((pourcentage_raideur - Kt_list_eff(BiomechanicalModel,MuscleConcerned,Fext,Fa,A,Fp,R,dRdq,J,dJdq)./Ktmax).^2); % fatigue non prise en compte norm(A)^2 +
 % Optimization
 [Aopt,fminval] = fmincon(cost_function2,A0,[],[],Aeq,beq,Amin,Amax,[],fmincon_options);
 end
