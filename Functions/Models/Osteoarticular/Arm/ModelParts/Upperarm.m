@@ -229,7 +229,7 @@ Humerus_position_set = {...
 
 num_solid=0;
 %% Humerus
-% Glenohumeral_J1
+% Glenohumeral_J1           % GH plane of elevation (ISB recommandations: Wu et al. 2005)
 num_solid=num_solid+1;        % number of the solid ...
 name=list_solid{num_solid}; % name of the solid
 eval(['incr_solid=s_' name ';'])  % number of the solid in the model
@@ -259,7 +259,7 @@ OsteoArticularModel(incr_solid).linear_constraint=[];
 OsteoArticularModel(incr_solid).Visual=0;
 OsteoArticularModel(incr_solid).FunctionalAngle='GH plane of elevation';
 
-% Glenohumeral_J2
+% Glenohumeral_J2           % Negative GH elevation (ISB recommandations: Wu et al. 2005)
 num_solid=num_solid+1;        % number of the solid ...
 name=list_solid{num_solid}; % name of the solid
 eval(['incr_solid=s_' name ';'])  % number of the solid in the model
@@ -285,7 +285,7 @@ OsteoArticularModel(incr_solid).FunctionalAngle='Negative GH elevation angle';
 
 % OsteoArticularModel(incr_solid).anat_position=Scapula_position_set;
 
-% Humerus
+% Humerus                   % GH axial rotation (ISB recommandations: Wu et al. 2005)
 num_solid=num_solid+1;         % number of the solid ...
 name=list_solid{num_solid}; % name of the solid
 eval(['incr_solid=s_' name ';'])  % number of the solid in the model

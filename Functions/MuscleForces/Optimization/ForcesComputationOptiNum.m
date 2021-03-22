@@ -79,7 +79,7 @@ end
 Lmt=zeros(Nb_muscles,Nb_frames);
 R=zeros(Nb_q,Nb_muscles,Nb_frames);
 for i=1:Nb_frames % for each frames
-    Lmt(idm,i)   =   MuscleLengthComputationNum(BiomechanicalModel,q(:,i)); %dependant of every q (q_complete)
+    Lmt(:,i)   =   MuscleLengthComputationNum(BiomechanicalModel,q(:,i)); %dependant of every q (q_complete)
     R(:,:,i)    =   MomentArmsComputationNum(BiomechanicalModel,q(:,i),0.0001); %depend on reduced set of q (q_red)
 end
 
@@ -103,7 +103,7 @@ Vm = gradient(Lm_norm)*freq;
 Amin = zeros(Nb_muscles,1);
 A0  = zeros(Nb_muscles,1);
 for i=1:size(idm,2)
-    Muscles(i).f0 = 100*Muscles(i).f0;
+    Muscles(i).f0 = Muscles(i).f0;
 end
 Fmax = [Muscles(idm).f0]';
 Amax = ones(Nb_muscles,1);
@@ -125,10 +125,10 @@ options2 = optimoptions(@fmincon,'Algorithm','sqp','Display','off','GradObj','of
 
 h = waitbar(0,['Forces Computation (' filename ')']);
 
-if isfield(BiomechanicalModel.OsteoArticularModel,'ClosedLoop') && ~isempty([BiomechanicalModel.OsteoArticularModel.ClosedLoop])
+if (isfield(BiomechanicalModel.OsteoArticularModel,'ClosedLoop') && ~isempty([BiomechanicalModel.OsteoArticularModel.ClosedLoop]))   || (~isempty(KinematicDependancy(BiomechanicalModel.OsteoArticularModel)))
     % TO BE CHANGED AFTER CALIBRATION
-    k=ones(size(q,1),1);
-    
+    k=BiomechanicalModel.GeometricalCalibration.k_calib;
+        
     [solid_path1,solid_path2,num_solid,num_markers]=Data_ClosedLoop(BiomechanicalModel.OsteoArticularModel);
     
     dependancies=KinematicDependancy(BiomechanicalModel.OsteoArticularModel);
