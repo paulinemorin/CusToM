@@ -100,15 +100,11 @@ Vm = gradient(Lm_norm)*freq;
 %% Computation of muscle forces (optimization)
 % Optimisation parameters
 
-Amin = zeros(Nb_muscles,1);
-A0  = zeros(Nb_muscles,1);
 for i=1:size(idm,2)
     Muscles(i).f0 = Muscles(i).f0;
 end
 Fmax = [Muscles(idm).f0]';
-Amax = ones(Nb_muscles,1);
-Fopt = zeros(Nb_muscles,Nb_frames);
-Aopt = zeros(size(Fopt));
+Aopt = zeros(Nb_muscles,Nb_frames);
 % Muscle Forces Matrices computation
 if isfield(AnalysisParameters.Muscles,'MuscleModel')
     [Fa,Fp]=AnalysisParameters.Muscles.MuscleModel(Lm,Vm,Fmax);
@@ -124,120 +120,97 @@ options2 = optimoptions(@fmincon,'Algorithm','sqp','Display','off','GradObj','of
 
 
 h = waitbar(0,['Forces Computation (' filename ')']);
+[solid_path1,solid_path2,num_solid,num_markers]=Data_ClosedLoop(BiomechanicalModel.OsteoArticularModel);
 
-if (isfield(BiomechanicalModel.OsteoArticularModel,'ClosedLoop') && ~isempty([BiomechanicalModel.OsteoArticularModel.ClosedLoop]))   || (~isempty(KinematicDependancy(BiomechanicalModel.OsteoArticularModel)))
-    % TO BE CHANGED AFTER CALIBRATION
-    k=BiomechanicalModel.GeometricalCalibration.k_calib;
-        
-    [solid_path1,solid_path2,num_solid,num_markers]=Data_ClosedLoop(BiomechanicalModel.OsteoArticularModel);
-    
-    dependancies=KinematicDependancy(BiomechanicalModel.OsteoArticularModel);
-    % Closed-loop constraints
-    KT(:,:,1)=ConstraintsJacobian(BiomechanicalModel,q(:,1),solid_path1,solid_path2,num_solid,num_markers,k,0.0001,dependancies)';
-    [idKT,~]=find(sum(KT(:,:,1),2)~=0);
-    %idq=unique(union(idKT,idxj));
-    % Baleck de l'épaule
-    idxj=setdiff(idxj,[8,9,10,11,12,13]);
-    idq=unique(union(idKT,idxj));
-    
-    % Creation of virtual torques
-    %     Z=eye(length(idq));
-    
-    % Adaptation of variables to closed-loop problem
-    indc=length([A0a ; randn(size(KT,2),1)]) +1;
-    %  A0 = [A0a ; zeros(size(KT,2),1) ; zeros(size(Z,2),1)];
-    A0 = [A0a ; randn(size(KT,2),1)];
-    % Aopt = [Aopt; zeros(size(KT,2),Nb_frames); zeros(size(Z,2),Nb_frames)];
-    Aopt = [Aopt; zeros(size(KT,2),Nb_frames)];
-    Amin = [Amin ;-inf*ones(size(KT,2),1) ];
-    Fmax = [Fmax ;inf*ones(size(KT,2),1)];
-    Amax = [Amax ;inf*ones(size(KT,2),1)];
-    %      Amin = [Amin ;-inf*ones(size(KT,2),1);-inf*ones(size(Z,2),1)];
-    %      Fmax = [Fmax ;inf*ones(size(KT,2),1);inf*ones(size(Z,2),1)];
-    %      Amax = [Amax ;inf*ones(size(KT,2),1);inf*ones(size(Z,2),1)];
-    % Moment arms and Active forces
-    Aeq = [R(idq,:,1).*Fa(:,1)' KT(idq,:,1)];
-    %Aeq = [R(idq,:,1).*Fa(:,1)' KT(idq,:,1) Z];
-    % Joint Torques
-    beq = torques(idq,1) - R(idq,:,1)*Fp(:,20);
-    
-    %A0 = [A0a ; zeros(size(KT,2),1) ; beq];
-    
-    
-    C=zeros(length(A0)-indc+1,Nb_frames);
-    % First frame optimization
-    [Aopt(:,1)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options1, AnalysisParameters.Muscles.CostfunctionOptions, Fa(:,1), Fmax,time(2));
-    % Muscular activiy
-    A0 = Aopt(:,1);
-    Fopt(:,1) = Fa(:,1).*Aopt(1:Nb_muscles,1)+Fp(:,1);
-    C(:,1)=Aopt(indc:end,1);
-    
-    waitbar(1/Nb_frames)
-    for i=2:Nb_frames % for following frames
-        %   i
-        % Closed-loop constraints
-        KT(:,:,i)=ConstraintsJacobian(BiomechanicalModel,q(:,i),solid_path1,solid_path2,num_solid,num_markers,k,0.0001,dependancies)';
-        % Moment arms and Active forces
-        Aeq = [R(idq,:,i).*Fa(:,i)' KT(idq,:,i)];
-        %    Aeq = [R(idq,:,i).*Fa(:,i)' KT(idq,:,i) Z];
-        % Joint Torques
-        beq=torques(idq,i)- R(idq,:,i)*Fp(:,i);
-        
-        %A0 = [A0a ; zeros(size(KT,2),1) ; beq];
-        
-        % Optimization
-        [Aopt(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options2, AnalysisParameters.Muscles.CostfunctionOptions, Fa(:,i), Fmax);
-        % Muscular activity
-        A0=Aopt(:,i);
-        Fopt(:,i) = Fa(:,i).*Aopt(1:Nb_muscles,i)+Fp(:,i);
-        C(:,i)=Aopt(indc:end,i);
-        waitbar(i/Nb_frames)
-    end
-    
-    % Static optimization results
-    MuscleForcesComputationResults.MuscleActivations(idm,:) = Aopt(1:Nb_muscles,:);
-    MuscleForcesComputationResults.MuscleForces(idm,:) = Fopt;
-    MuscleForcesComputationResults.MuscleLengths= Lmt;
-    MuscleForcesComputationResults.MuscleLeverArm = R;
-    MuscleForcesComputationResults.Constraints = C;
-    MuscleForcesComputationResults.KT = KT;
-    MuscleForcesComputationResults.lambda=Aopt(Nb_muscles+1:indc-1,:);
-    
-else
-    
-    effector = AnalysisParameters.Muscles.Stiffness.effector;
-    %effector = [29 2]; %Effector : hand(29) and marker end of hand (2)
-    %Effectors : Solids RFOOT (22), LFOOT (28) and markers anat_position RTOE (3), LTOE (3)
-    i_eff = 1;
-    for solid_eff=effector(:,1)' %among the effector solids
-        SolidConcerned_eff = find_solid_path(BiomechanicalModel.OsteoArticularModel,solid_eff,1); 
-         MuscleConcerned_eff = []; %construction of MuscleConcerned
-        for i=1:Nb_muscles
-            if ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(1),SolidConcerned_eff)) && ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(end),SolidConcerned_eff)) 
-                %verifying that the first
-                %and last solids connected to the muscle belong to
-                %SolidConcerned_eff
-                MuscleConcerned_eff = [MuscleConcerned_eff i];
-            end
+dependancies=KinematicDependancy(BiomechanicalModel.OsteoArticularModel);
+% Closed-loop constraints
+
+KT=ConstraintsJacobian(BiomechanicalModel,q(:,1),solid_path1,solid_path2,num_solid,num_markers,ones(size(q,1),1),0.0001,dependancies)';
+
+effector = AnalysisParameters.Muscles.Stiffness.effector;
+i_eff = 1;
+for solid_eff=effector(:,1)' %among the effector solids
+    SolidConcerned_eff = find_solid_path(BiomechanicalModel.OsteoArticularModel,solid_eff,1);
+    MuscleConcerned_eff = []; %construction of MuscleConcerned
+    for i=1:Nb_muscles
+        if ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(1),SolidConcerned_eff)) && ~isempty(intersect(BiomechanicalModel.Muscles(i).num_solid(end),SolidConcerned_eff))
+            %verifying that the first and last solids connected to the muscle belong to SolidConcerned_eff
+            MuscleConcerned_eff = [MuscleConcerned_eff i];
         end
-        SolidConcerned(i_eff).list = SolidConcerned_eff;
-        MuscleConcerned(i_eff).list = MuscleConcerned_eff;
-        i_eff = i_eff + 1;
     end
-    % Moment arms and Active forces
-    Aeq=R(idxj,:,1).*Fa(:,1)';
-    % Joint Torques and Passive force
-    beq=torques(idxj,1) - R(idxj,:,1)*Fp(:,1);
-    %Ktmax
-    options = optimoptions('fmincon','Algorithm','sqp','Display','off');
-    Amin = zeros(Nb_muscles,1);
-    A0 = 0.5*ones(Nb_muscles,1);
-    Amax = ones(Nb_muscles,1);
+    SolidConcerned(i_eff).list = SolidConcerned_eff;
+    MuscleConcerned(i_eff).list = MuscleConcerned_eff;
+    i_eff = i_eff + 1;
+end
+
+lambda = zeros(size(KT,2),1);
+
+
+
+
+
+%Ktmax
+options = optimoptions('fmincon','Algorithm','sqp','Display','off');
+Amin = [Amin; -inf*ones(size(lambda))];
+A0 = 0.5*ones(Nb_muscles,1);
+Amax = [Amax; inf*ones(size(lambda))];
+X0 = [A0 ; lambda];
+i_eff=1;
+i=1;
+Ktmax=[];
+for solid_eff=effector(:,1)'
+    Fext = ExtForces(1).fext(solid_eff);
+    Fext = Fext.fext(1:3,1);
+    dp=0.0001;
+    dRdqtemp = DerivateMomentArmsComputationNum(BiomechanicalModel,q(:,i),dp,SolidConcerned(i_eff).list);
+    dRdq{i_eff}=dRdqtemp(idxj,:,idxj);
+    Jtemp = diffdXdq(effector(i_eff,:), SolidConcerned(i_eff).list, BiomechanicalModel, q(:,i), dp);
+    J{i_eff} = Jtemp(:,idxj);
+    dJdqtemp= diff2dXdq(effector(i_eff,:), SolidConcerned(i_eff).list, BiomechanicalModel, q(:,i), dp);
+    dJdq{i_eff} = dJdqtemp(idxj,:,idxj);
+    [Active_max,fval] = fmincon(@(A) funKtmax(A,BiomechanicalModel,MuscleConcerned(i_eff).list,Fext,Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff}),A0,Aeq,beq,[],[],zeros(Nb_muscles,1),ones(Nb_muscles,1),[],options);
+    Ktmax = [Ktmax -fval];
+    i_eff=i_eff+1;
+end
+% Optimization
+% Moment arms and Active forces
+Aeq = [R(idxj,:,1).*Fa(:,1)' , KT(idxj,:)] ;
+% Joint Torques and Passive force
+beq=torques(idq,1) - R(idq,:,1)*Fp(:,1);
+[X(:,1)]=AnalysisParameters.Muscles.Costfunction(X0,Aeq,beq, Amin, Amax, [], [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq,J,dJdq, AnalysisParameters.Muscles.Stiffness.alpha, Ktmax);
+% Muscular activity
+Aopt(:,1) = X(1:Nb_muscles,1);
+X0 = X(:,1);
+Fopt(:,1) = Fa(:,1).*Aopt(:,1)+Fp(:,1);
+waitbar(1/Nb_frames)
+
+
+
+%initialisation
+Kt=cell(numel(effector(:,1)),Nb_frames);
+Kj=cell(numel(effector(:,1)),Nb_frames);
+Km=cell(numel(effector(:,1)),Nb_frames);
+FMT = Fopt(:,i);
+i_eff = 1;
+for solid_eff=effector(:,1)'
+    Fext = ExtForces(1).fext(solid_eff);
+    Fext = Fext.fext(1:3,1); %external forces applied to the solid_eff at the first frame
+    Kt(i_eff,i) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,Fext, FMT,R(idxj,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff})};
+    Kj(i_eff,i) ={JointStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list, FMT,R(idxj,:,i),dRdq{i_eff})};
+    km = zeros(length(FMT),1);
+    km(MuscleConcerned(i_eff).list) = 23.4*FMT(MuscleConcerned(i_eff).list)./[BiomechanicalModel.Muscles(MuscleConcerned(i_eff).list).l0]';
+    Km(i_eff,i)  = {diag(km)};
+    
+    i_eff = i_eff+1;
+end
+%     MuscleForcesComputationResults.TaskStiffness(1) = {Kt(:,1)};
+
+for i=2:Nb_frames % for following frames
+
     i_eff=1;
-    i=1;
     Ktmax=[];
     for solid_eff=effector(:,1)'
-        Fext = ExtForces(1).fext(solid_eff);
+        Fext = ExtForces(i).fext(solid_eff);
         Fext = Fext.fext(1:3,1);
         dp=0.0001;
         dRdqtemp = DerivateMomentArmsComputationNum(BiomechanicalModel,q(:,i),dp,SolidConcerned(i_eff).list);
@@ -248,105 +221,57 @@ else
         dJdq{i_eff} = dJdqtemp(idxj,:,idxj);
         [Active_max,fval] = fmincon(@(A) funKtmax(A,BiomechanicalModel,MuscleConcerned(i_eff).list,Fext,Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff}),A0,Aeq,beq,[],[],zeros(Nb_muscles,1),ones(Nb_muscles,1),[],options);
         Ktmax = [Ktmax -fval];
-            i_eff=i_eff+1;
+        i_eff=i_eff+1;
     end
     % Optimization
-    Amin = zeros(Nb_muscles,1);
-    A0 = 0.5*ones(Nb_muscles,1);
-    Amax = ones(Nb_muscles,1);
-    Aopt(:,i)=AnalysisParameters.Muscles.Costfunction(A0,Aeq,beq, Amin, Amax, [], [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq,J,dJdq, AnalysisParameters.Muscles.Stiffness.alpha, Ktmax);
-    % Muscular activity
-    A0=Aopt(:,1);
-    %           A0=randn(size(A0));
+    KT=ConstraintsJacobian(BiomechanicalModel,q(:,i),solid_path1,solid_path2,num_solid,num_markers,ones(size(q,1),1),0.0001,dependancies)';
+     % Moment arms and Active forces
+    Aeq = [R(idxj,:,1).*Fa(:,1)' , KT(idxj,:)] ;
+    % Joint Torques and Passive force
+    beq=torques(idq,1) - R(idq,:,1)*Fp(:,1);
     
-    Fopt(:,1) = Fa(:,1).*Aopt(:,1)+Fp(:,1);
-    waitbar(1/Nb_frames)
     
+    [X(:,i)]=AnalysisParameters.Muscles.Costfunction(X0,Aeq,beq, Amin, Amax, [], [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq,J,dJdq, AnalysisParameters.Muscles.Stiffness.alpha, Ktmax);
 
     
-    %initialisation
-    Kt=cell(numel(effector(:,1)),Nb_frames);
-    Kj=cell(numel(effector(:,1)),Nb_frames);
-    Km=cell(numel(effector(:,1)),Nb_frames);
+    % Muscular activity
+    
+    Aopt(:,i) = X(1:Nb_muscles,i);
+    X0 = X(:,i);
+    Fopt(:,i) = Fa(:,i).*Aopt(:,i)+Fp(:,i);
+    waitbar(i/Nb_frames)
+    
+    
+    
     FMT = Fopt(:,i);
     i_eff = 1;
     for solid_eff=effector(:,1)'
-        Fext = ExtForces(1).fext(solid_eff);
-        Fext = Fext.fext(1:3,1); %external forces applied to the solid_eff at the first frame
+        Fext = ExtForces(i).fext(solid_eff);
+        Fext = Fext.fext(1:3,1); %external forces applied to the solid_eff at the i-frame
         Kt(i_eff,i) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,Fext, FMT,R(idxj,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff})};
         Kj(i_eff,i) ={JointStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list, FMT,R(idxj,:,i),dRdq{i_eff})};
+        
         km = zeros(length(FMT),1);
         km(MuscleConcerned(i_eff).list) = 23.4*FMT(MuscleConcerned(i_eff).list)./[BiomechanicalModel.Muscles(MuscleConcerned(i_eff).list).l0]';
         Km(i_eff,i)  = {diag(km)};
-            
+        
         i_eff = i_eff+1;
     end
-    %     MuscleForcesComputationResults.TaskStiffness(1) = {Kt(:,1)};
     
-    for i=2:Nb_frames % for following frames
-        % Moment arms and Active forces
-        Aeq=R(idxj,:,i).*Fa(:,i)';
-        % Joint Torques and Passive force
-        beq=torques(idxj,i) - R(idxj,:,i)*Fp(:,i);
-        i_eff=1;
-        Ktmax=[];
-        for solid_eff=effector(:,1)'
-            Fext = ExtForces(i).fext(solid_eff);
-            Fext = Fext.fext(1:3,1);
-            dp=0.0001;
-            dRdqtemp = DerivateMomentArmsComputationNum(BiomechanicalModel,q(:,i),dp,SolidConcerned(i_eff).list);
-            dRdq{i_eff}=dRdqtemp(idxj,:,idxj);
-            Jtemp = diffdXdq(effector(i_eff,:), SolidConcerned(i_eff).list, BiomechanicalModel, q(:,i), dp);
-            J{i_eff} = Jtemp(:,idxj);
-            dJdqtemp= diff2dXdq(effector(i_eff,:), SolidConcerned(i_eff).list, BiomechanicalModel, q(:,i), dp);
-            dJdq{i_eff} = dJdqtemp(idxj,:,idxj);
-            [Active_max,fval] = fmincon(@(A) funKtmax(A,BiomechanicalModel,MuscleConcerned(i_eff).list,Fext,Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff}),A0,Aeq,beq,[],[],zeros(Nb_muscles,1),ones(Nb_muscles,1),[],options);
-            Ktmax = [Ktmax -fval];
-            i_eff=i_eff+1;
-        end
-        % Optimization
-        Amin = zeros(Nb_muscles,1);
-        A0 = 0.5*ones(Nb_muscles,1);
-        Amax = ones(Nb_muscles,1);
-        [Aopt(:,i)]=AnalysisParameters.Muscles.Costfunction(A0,Aeq,beq, Amin, Amax, options2, [],AnalysisParameters.Muscles.CostfunctionOptions,BiomechanicalModel,MuscleConcerned,Fext, Fa(:,i),Fp(:,i),R(idxj,:,i),dRdq,J,dJdq, AnalysisParameters.StiffnessPercent, Ktmax);
-        %[Aopt(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options2, AnalysisParameters.Muscles.CostfunctionOptions, Fa(:,i), Fmax);
-        % Muscular activity
-        
-        A0=Aopt(:,i);
-        %          A0=randn(size(A0));
-        Fopt(:,i) = Fa(:,i).*Aopt(:,i)+Fp(:,i);
-        waitbar(i/Nb_frames)
-        
-        
-        
-        FMT = Fopt(:,i);
-        i_eff = 1;
-        for solid_eff=effector(:,1)'
-            Fext = ExtForces(i).fext(solid_eff);
-            Fext = Fext.fext(1:3,1); %external forces applied to the solid_eff at the i-frame
-            Kt(i_eff,i) = {TaskStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list,Fext, FMT,R(idxj,:,i),dRdq{i_eff},J{i_eff},dJdq{i_eff})};
-            Kj(i_eff,i) ={JointStiffness(BiomechanicalModel,MuscleConcerned(i_eff).list, FMT,R(idxj,:,i),dRdq{i_eff})};
-            
-            km = zeros(length(FMT),1);
-            km(MuscleConcerned(i_eff).list) = 23.4*FMT(MuscleConcerned(i_eff).list)./[BiomechanicalModel.Muscles(MuscleConcerned(i_eff).list).l0]';
-            Km(i_eff,i)  = {diag(km)};
-            
-            i_eff = i_eff+1;
-        end
-        
+    
+    
+end
 
-        
-    end
-    
-    MuscleForcesComputationResults.MuscleActivations(idm,:) = Aopt;
-    MuscleForcesComputationResults.MuscleForces(idm,:) = Fopt;
-    MuscleForcesComputationResults.MuscleLengths= Lmt;
-    MuscleForcesComputationResults.MuscleLeverArm = R;
-    MuscleForcesComputationResults.Stiffness.TaskStiffness = Kt;    
-    MuscleForcesComputationResults.Stiffness.JointStiffness = Kj;    
-    MuscleForcesComputationResults.Stiffness.MuscleStiffness = Km;    
-    MuscleForcesComputationResults.Stiffness.MuscleConcerned = MuscleConcerned;    
-    close(h)
-    
-    disp(['... Forces Computation (' filename ') done'])
+MuscleForcesComputationResults.MuscleActivations(idm,:) = Aopt;
+MuscleForcesComputationResults.MuscleForces(idm,:) = Fopt;
+MuscleForcesComputationResults.MuscleLengths= Lmt;
+MuscleForcesComputationResults.MuscleLeverArm = R;
+MuscleForcesComputationResults.Lambda = X(Nb_muscles+1:end,:);
+MuscleForcesComputationResults.Stiffness.TaskStiffness = Kt;
+MuscleForcesComputationResults.Stiffness.JointStiffness = Kj;
+MuscleForcesComputationResults.Stiffness.MuscleStiffness = Km;
+MuscleForcesComputationResults.Stiffness.MuscleConcerned = MuscleConcerned;
+close(h)
+
+disp(['... Forces Computation (' filename ') done'])
 end
