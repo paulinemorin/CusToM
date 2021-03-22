@@ -29,15 +29,18 @@ function [Aopt] = PolynomialFunction(A0, Aeq, beq, Amin, Amax, fmincon_options, 
 % Georges Dumont
 %________________________________________________________
 
-% Cost function
-% if ~sum(isinf(Amax))
-% cost_function = @(A) sum((Fa./Fmax.*A).^(options));
-% else
-%     % ClosedLoop case
-%     ind_act=find(isinf(Amax)); % first element to be infinite in Fmax
-%     cost_function = @(A) sum((Fa./Fmax(1:ind_act-1).*A(1:ind_act-1)).^(options));
-% end
-cost_function2 = @(A) sum((pourcentage_raideur - Kt_list_eff(BiomechanicalModel,MuscleConcerned,Fext,Fa,A,Fp,R,dRdq,J,dJdq)./Ktmax).^2); % fatigue non prise en compte norm(A)^2 +
+%Cost function
+if ~sum(isinf(Amax))
+    cost_function = @(A) sum((Fa./Fmax.*A).^(options));
+else
+    % ClosedLoop case
+    if ~isempty(pourcentage_raideur) && ~isempty(find(pourcentage_raideur,1))
+        cost_function = @(A) sum((pourcentage_raideur - Kt_list_eff(BiomechanicalModel,MuscleConcerned,Fext,Fa,A,Fp,R,dRdq,J,dJdq)./Ktmax).^2); % fatigue non prise en compte norm(A)^2 +
+    else
+        ind_act=find(isinf(Amax)); % first element to be infinite in Fmax
+        cost_function = @(A) sum((Fa./Fmax.*A(1:ind_act-1)).^(options));
+    end
+end
 % Optimization
-[Aopt,fminval] = fmincon(cost_function2,A0,[],[],Aeq,beq,Amin,Amax,[],fmincon_options);
+[Aopt,fminval] = fmincon(cost_function,A0,[],[],Aeq,beq,Amin,Amax,[],fmincon_options);
 end
