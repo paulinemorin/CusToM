@@ -360,4 +360,15 @@ OsteoArticularModel(incr_solid).density=1.07; %kg.L-1
 % OsteoArticularModel(incr_solid).wrap(2).h=k*0.1;
 % OsteoArticularModel(incr_solid).wrap(2).num_solid=incr_solid;
 
+% Wrapping Lat
+% OsteoArticularModel(incr_solid).wrap(3).name=['Wrap' Signe 'HumerusLat'];
+% OsteoArticularModel(incr_solid).wrap(3).anat_position=['Wrap' Signe 'HumerusLat'];
+% OsteoArticularModel(incr_solid).wrap(3).type='S'; % C: Cylinder or S: Sphere
+% OsteoArticularModel(incr_solid).wrap(3).radius=k*0.03;
+% OsteoArticularModel(incr_solid).wrap(3).R=[ 0.9619    -0.0190    (-1)^Signe_bool*0.2726;
+%                                             -0.0150    0.9924    (-1)^Signe_bool*0.1221;
+%                                             (-1)^Signe_bool*-0.2729   (-1)^Signe_bool*-0.1215    0.9543];
+% OsteoArticularModel(incr_solid).wrap(3).location=Mirror*osim2antoine'.*[-0.0016 0.0092 0.0052]'+Humerus_ghJointNode';
+% OsteoArticularModel(incr_solid).wrap(3).h=0;
+% OsteoArticularModel(incr_solid).wrap(3).num_solid=incr_solid;
 end
