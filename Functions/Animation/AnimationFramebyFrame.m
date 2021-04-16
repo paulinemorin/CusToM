@@ -207,8 +207,8 @@ for f=f_affich
             R11=[];R12=[];R13=[];R21=[];R22=[];R23=[];R31=[];R32=[];R33=[];
             for index=options.Segment
                 if ~isempty( BiomechanicalModel.OsteoArticularModel(index).anat_position)
-                    anat_points=BiomechanicalModel.OsteoArticularModel(index).anat_position(:,2);
-                    for each_pt=1:size(anat_points,1)
+                    anat_points=BiomechanicalModel.OsteoArticularModel(index).anat_position(options.AnatLandmarknum,2);
+                    for each_pt=1:length(options.AnatLandmarknum)
                         anat_points{each_pt}=Human_model_bis(index).R*(anat_points{each_pt}+BiomechanicalModel.OsteoArticularModel(index).c)+Human_model_bis(index).p;
                     end
                     anat_pointsold = [anat_pointsold ; anat_points];
@@ -231,7 +231,7 @@ for f=f_affich
                     R32=[R32 Human_model_bis(index).R(3,2)];
                     R33=[R33 Human_model_bis(index).R(3,3)];
                     
-                    labels=[labels; BiomechanicalModel.OsteoArticularModel(index).anat_position(:,1)];
+                    labels=[labels; BiomechanicalModel.OsteoArticularModel(index).anat_position(options.AnatLandmarknum,1)];
                     
                 end
                 
@@ -733,16 +733,22 @@ for f=f_affich
         Fe=[];
         CEe=[];
         Ve=[];
-        num_solid=7;
-        
-        for i_w = 1:2
-            pos_ell=Human_model_bis(7).anat_position{8+i_w, 2};
+        [~,num_Thorax] = intersect({Human_model_bis.name},'Thorax');
+        [~,ind_anat_ellips] = intersect(Human_model_bis(num_Thorax).anat_position(:,1),'Thorax_scjJointRightNode');
+        [~,num_Scapula] = intersect({Human_model_bis.name},'RScapula');
+        [~,ind_radius_ellips] = intersect(Human_model_bis(num_Scapula).anat_position(:,1),'ThoracicEllipsoid_radius');
+        Ellips_radius = Human_model_bis(num_Scapula).anat_position(ind_radius_ellips,2);
+        Ellips_radius = Ellips_radius{1};
+        Ellips_rx = Ellips_radius(1);
+        Ellips_ry = Ellips_radius(2);
+        Ellips_rz = Ellips_radius(3);
+        for i_w = 0:1
+            pos_ell=Human_model_bis(num_Thorax).anat_position{ind_anat_ellips+i_w, 2};
             T_Ri_Rw=[eye(3,3), pos_ell;[0 0 0],1];
-            X = Human_model_bis(num_solid).Tc_R0_Ri*T_Ri_Rw;
-            [xel1,yel1,zel1]=ellipsoid(0,0,0,1.8/1.7*0.07,1.8/1.7*0.15,1.8/1.7*0.07);
+            X=Human_model_bis(num_Thorax).Tc_R0_Ri*T_Ri_Rw;
+            [xel1,yel1,zel1]=ellipsoid(0,0,0,Ellips_rx,Ellips_ry,Ellips_rz);
             [Fel1,Vel1]=surf2patch(xel1,yel1,zel1);
-            Vell_R0= (X*[Vel1';ones(1,length(Vel1))])';
-            
+            Vell_R0=(X*[Vel1';ones(1,length(Vel1))])';
             tot_nb_F=length(Fe);
             cur_nb_F=length(Fel1);
             tot_nb_V=length(Ve);
