@@ -216,7 +216,9 @@ if strcmp(mus_name,'PronatorQuadratus')
     RegressionStructure(1).coeffs=[7.30854e-3  2.28126e-3  -2.81928e-3  -1.02119e-3  1.74483e-5]';
 
     if strcmp(axis,'Forearm pronation(+)/supination(-)') || strcmp(axis,'Forearm pronation(-)/supination(+)') 
-        [~,ind] = intersect(joints_names,{'Forearm pronation-supination'});
+        [~,ind] = intersect(joints_names,{'Forearm pronation(+)/supination(-)'});
+        [~,ind2] = intersect(joints_names,{'Forearm pronation(-)/supination(+)'});
+        ind = [ind, ind2];
         if length(ind)==1
             Q  = q(ind,:)';
             coeffs=[7.30854e-3  2.28126e-3  -2.81928e-3  -1.02119e-3  1.74483e-5]';

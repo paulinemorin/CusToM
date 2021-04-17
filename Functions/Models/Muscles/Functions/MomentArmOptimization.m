@@ -94,8 +94,6 @@ insertion = BiomechanicalModel.OsteoArticularModel(involved_solid(end)).anat_pos
 origin = BiomechanicalModel.OsteoArticularModel(involved_solid(1)).anat_position{num_markers(1),2}(2) +  BiomechanicalModel.OsteoArticularModel(involved_solid(1)).c(2) ;
 
 
-options = optimoptions(@fmincon,'Algorithm','sqp','Display','final','MaxFunEvals',100000,'TolCon',1e-6);
-
 par_case = 0;
 [sp1,sp2]=find_solid_path(BiomechanicalModel.OsteoArticularModel, involved_solid(1), involved_solid(end));
 if length(sp1)~=1 && length(sp2)~=1
@@ -125,16 +123,12 @@ while sum(cond_resp<=0)<length(cond_resp)
 end
 
 
-% options_pattern = optimoptions(@patternsearch,'PlotFcn', 'psplotfuncount');
-% x = patternsearch(fun,x0,[],[],[],[],[],[],nonlcon,options_pattern);
-
 optionsgs = optimoptions(@fmincon,'MaxIter',1e10,'MaxFunEvals',1e10);%,'PlotFcn','optimplotfval');
 
 gs = GlobalSearch('StartPointsToRun','bounds-ineqs','BasinRadiusFactor',0.2,'DistanceThresholdFactor',0.75);
 problem = createOptimProblem('fmincon','x0',x0,...
     'objective',fun,'nonlcon',nonlcon,'options',optionsgs);
 x = run(gs,problem);
-
 
 %% Affecting via points found to BiomechanicalModel
 
@@ -153,6 +147,7 @@ end
 
 
 %% For muscle which path actuates at least one DOF
+% COMMENTE UNIQUEMENT POUR LE TEST DE LANCONEUS
 if size({RegressionStructure.axe},2)==1
     [BiomechanicalModel]=LengthMinimisation(involved_solid,num_markers,BiomechanicalModel,RegressionStructure,num_muscle(1),nb_points);
 end
