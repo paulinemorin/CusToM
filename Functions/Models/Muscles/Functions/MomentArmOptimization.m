@@ -130,6 +130,7 @@ problem = createOptimProblem('fmincon','x0',x0,...
     'objective',fun,'nonlcon',nonlcon,'options',optionsgs);
 x = run(gs,problem);
 
+
 %% Affecting via points found to BiomechanicalModel
 
 num_solid=involved_solids;

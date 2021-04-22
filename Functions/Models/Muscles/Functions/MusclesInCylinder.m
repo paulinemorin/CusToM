@@ -49,7 +49,7 @@ for k=1:numel(num_solid)
     rcarre= radius(k)^2;
     % Constraint about radius cylinder
     c =  [c (HumanModel(temp1).anat_position{temp2,2}(1) +  HumanModel(temp1).c(1)  )^2 +  (HumanModel(temp1).anat_position{temp2,2}(3) +  HumanModel(temp1).c(3) )^2 - rcarre];
-    
+
 end
 
 
@@ -104,7 +104,11 @@ for k=2:length(num_solid) -1
     end
     c = [c  abs(HumanModel(temp1).anat_position{temp2,2}(2) +  HumanModel(temp1).c(2) ) - abs(ylength)];
     c = [c HumanModel(temp1).anat_position{temp2,2}(2) +  HumanModel(temp1).c(2)];
+    if mod(k-2,2)==0
+        c = [c x(2 + 3*k) - x(2 + 3*(k-1)) ];
+    end
 end
+
 
 
 else
