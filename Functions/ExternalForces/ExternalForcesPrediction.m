@@ -202,7 +202,11 @@ for i=1:nbframe
             Prediction(pred).efforts_max(i,2)=Cpi; %Fy
             Prediction(pred).efforts_max(i,3)=Cpi; %Fz
     end
-    Fmax=[Fx(:,i)' Fy(:,i)' Fz(:,i)'];
+    %Fmax=[Fx(:,i)' Fy(:,i)' Fz(:,i)'];
+    Fmax=[];
+    for k = 1:numel(Prediction)
+        Fmax=[Fmax,Fx(k,i) Fy(k,i) Fz(k,i)];
+    end
     
     %% Direct optimisation by linearization of the dynamical condition.
     A=zeros(6,3*numel(Prediction));
@@ -214,35 +218,67 @@ for i=1:nbframe
     bt=b2+cross(-p_pelvis(i,:)',b1); %on ramene les couples au niveau du pelvis (torques are expressed at pelvis point)
     b=[bf' bt']';
     
+%     for k = 1:numel(Prediction)
+%         % calcul des efforts
+%         A(1,k)=Prediction(k).efforts_max(i,1);
+%         A(2,k+numel(Prediction))=Prediction(k).efforts_max(i,2);
+%         A(3,k+2*numel(Prediction))=Prediction(k).efforts_max(i,3);
+%         % calcul des moments
+%         A(4,k+numel(Prediction))=-(Prediction(k).pz(i)-p_pelvis(i,3))*Prediction(k).efforts_max(i,2); %-pz*beta
+%         A(4,k+2*numel(Prediction))=(Prediction(k).py(i)-p_pelvis(i,2))*Prediction(k).efforts_max(i,3); %py*gamma
+%         A(5,k)=(Prediction(k).pz(i)-p_pelvis(i,3))*Prediction(k).efforts_max(i,1); %pz*alpha
+%         A(5,k+2*numel(Prediction))=-(Prediction(k).px(i)-p_pelvis(i,1))*Prediction(k).efforts_max(i,3); %-px*gamma
+%         A(6,k)=-(Prediction(k).py(i)-p_pelvis(i,2))*Prediction(k).efforts_max(i,1); %-py*alpha
+%         A(6,k+numel(Prediction))=(Prediction(k).px(i)-p_pelvis(i,1))*Prediction(k).efforts_max(i,2); %px*beta
+%     end
+    
     for k = 1:numel(Prediction)
         % calcul des efforts
-        A(1,k)=Prediction(k).efforts_max(i,1);
-        A(2,k+numel(Prediction))=Prediction(k).efforts_max(i,2);
-        A(3,k+2*numel(Prediction))=Prediction(k).efforts_max(i,3);
+        A(1,1+(k-1)*3)=Prediction(k).efforts_max(i,1);
+        A(2,2+(k-1)*3)=Prediction(k).efforts_max(i,2);
+        A(3,3+(k-1)*3)=Prediction(k).efforts_max(i,3);
         % calcul des moments
-        A(4,k+numel(Prediction))=-(Prediction(k).pz(i)-p_pelvis(i,3))*Prediction(k).efforts_max(i,2); %-pz*beta
-        A(4,k+2*numel(Prediction))=(Prediction(k).py(i)-p_pelvis(i,2))*Prediction(k).efforts_max(i,3); %py*gamma
-        A(5,k)=(Prediction(k).pz(i)-p_pelvis(i,3))*Prediction(k).efforts_max(i,1); %pz*alpha
-        A(5,k+2*numel(Prediction))=-(Prediction(k).px(i)-p_pelvis(i,1))*Prediction(k).efforts_max(i,3); %-px*gamma
-        A(6,k)=-(Prediction(k).py(i)-p_pelvis(i,2))*Prediction(k).efforts_max(i,1); %-py*alpha
-        A(6,k+numel(Prediction))=(Prediction(k).px(i)-p_pelvis(i,1))*Prediction(k).efforts_max(i,2); %px*beta
+        A(4,2+(k-1)*3)=-(Prediction(k).pz(i)-p_pelvis(i,3))*Prediction(k).efforts_max(i,2); %-pz*beta
+        A(4,3+(k-1)*3)=(Prediction(k).py(i)-p_pelvis(i,2))*Prediction(k).efforts_max(i,3); %py*gamma
+        A(5,1+(k-1)*3)=(Prediction(k).pz(i)-p_pelvis(i,3))*Prediction(k).efforts_max(i,1); %pz*alpha
+        A(5,3+(k-1)*3)=-(Prediction(k).px(i)-p_pelvis(i,1))*Prediction(k).efforts_max(i,3); %-px*gamma
+        A(6,1+(k-1)*3)=-(Prediction(k).py(i)-p_pelvis(i,2))*Prediction(k).efforts_max(i,1); %-py*alpha
+        A(6,2+(k-1)*3)=(Prediction(k).px(i)-p_pelvis(i,1))*Prediction(k).efforts_max(i,2); %px*beta
     end
     
     %% Taking friction into account for every point to point link, |Fx|<0.5|Fz| et |Fy|<0.5|Fz|
     Afric=zeros(4*numel(Prediction),3*numel(Prediction));
     bfric=zeros(4*numel(Prediction),1);
 
-    for k = 1:(numel(Prediction))
-        Afric(k,k)=1*Prediction(k).efforts_max(i,1);
-        Afric(k+numel(Prediction),k+numel(Prediction))=1*Prediction(k).efforts_max(i,2);
-        Afric(k,k+2*numel(Prediction))=-coef_friction*Prediction(k).efforts_max(i,3);
-        Afric(k+numel(Prediction),k+2*numel(Prediction))=-coef_friction*Prediction(k).efforts_max(i,2);
-        Afric(k+2*numel(Prediction),k)=-1*Prediction(k).efforts_max(i,1);
-        Afric(k+3*numel(Prediction),k+numel(Prediction))=-1*Prediction(k).efforts_max(i,2);
-        Afric(k+2*numel(Prediction),k+2*numel(Prediction))=-coef_friction*Prediction(k).efforts_max(i,3);
-        Afric(k+3*numel(Prediction),k+2*numel(Prediction))=-coef_friction*Prediction(k).efforts_max(i,3);
-    end
+%     for k = 1:(numel(Prediction))
+%         Afric(k,k)=1*Prediction(k).efforts_max(i,1);
+%         Afric(k+numel(Prediction),k+numel(Prediction))=1*Prediction(k).efforts_max(i,2);
+%         Afric(k,k+2*numel(Prediction))=-coef_friction*Prediction(k).efforts_max(i,3);
+%         Afric(k+numel(Prediction),k+2*numel(Prediction))=-coef_friction*Prediction(k).efforts_max(i,2);
+%         Afric(k+2*numel(Prediction),k)=-1*Prediction(k).efforts_max(i,1);
+%         Afric(k+3*numel(Prediction),k+numel(Prediction))=-1*Prediction(k).efforts_max(i,2);
+%         Afric(k+2*numel(Prediction),k+2*numel(Prediction))=-coef_friction*Prediction(k).efforts_max(i,3);
+%         Afric(k+3*numel(Prediction),k+2*numel(Prediction))=-coef_friction*Prediction(k).efforts_max(i,3);
+%     end
     
+             
+for k = 1:(numel(Prediction))
+    Afric(1+(k-1)*4,1+(k-1)*3)=1*Prediction(k).efforts_max(i,1);
+    Afric(2+(k-1)*4,2+(k-1)*3)=1*Prediction(k).efforts_max(i,2);
+    Afric(1+(k-1)*4,3+(k-1)*3)=-coef_friction*Prediction(k).efforts_max(i,3);
+    Afric(2+(k-1)*4,3+(k-1)*3)=-coef_friction*Prediction(k).efforts_max(i,2);
+    Afric(3+(k-1)*4,1+(k-1)*3)=-1*Prediction(k).efforts_max(i,1);
+    Afric(4+(k-1)*4,2+(k-1)*3)=-1*Prediction(k).efforts_max(i,2);
+    Afric(3+(k-1)*4,3+(k-1)*3)=-coef_friction*Prediction(k).efforts_max(i,3);
+    Afric(4+(k-1)*4,3+(k-1)*3)=-coef_friction*Prediction(k).efforts_max(i,3);
+end
+    
+    
+    % Foot orientation Orientation
+    Theta = zeros(3*numel(Prediction),3*numel(Prediction));
+    for k=1:numel(Prediction)
+        Theta(3*(k-1)+1:3*(k-1)+3,3*(k-1)+1:3*(k-1)+3)=Human_model(Prediction(k).num_solid).R;
+    end
 %     if AnalysisParameters.Prediction.ContactDetection == 3
 %         Afric = inv(T21(1:3,1:3,i))*Afric;
 %     end
@@ -258,14 +294,18 @@ for i=1:nbframe
     
     %% Récupération des forces finales, stockées d'abord dans Prediction (Final forces storage without prediction)
     for k = 1:numel(Prediction)
-        Prediction(k).efforts(i,1)=X(k)*Prediction(k).efforts_max(i,1);
-        Prediction(k).efforts(i,2)=X(k+numel(Prediction))*Prediction(k).efforts_max(i,2);
-        Prediction(k).efforts(i,3)=X(k+2*numel(Prediction))*Prediction(k).efforts_max(i,3);
+%         Prediction(k).efforts(i,1)=X(k)*Prediction(k).efforts_max(i,1);
+%         Prediction(k).efforts(i,2)=X(k+numel(Prediction))*Prediction(k).efforts_max(i,2);
+%         Prediction(k).efforts(i,3)=X(k+2*numel(Prediction))*Prediction(k).efforts_max(i,3);
+        Prediction(k).efforts(i,1)=X(1+3*(k-1))*Prediction(k).efforts_max(i,1);
+        Prediction(k).efforts(i,2)=X(2+3*(k-1))*Prediction(k).efforts_max(i,2);
+        Prediction(k).efforts(i,3)=X(3+3*(k-1))*Prediction(k).efforts_max(i,3);
     end
     
     %% Calcul des efforts extérieurs tels qu’utilisés par la suite pour la dynamique
     %% Computation of external forces for use with dynamics
-    external_forces_pred=addForces_Prediction_frame_par_frame(X,external_forces_pred,Prediction,Fmax,i);
+    %external_forces_pred=addForces_Prediction_frame_par_frame(X,external_forces_pred,Prediction,Fmax,i);
+    external_forces_pred=addForces_Prediction_frame_par_frame_COP(X,external_forces_pred,Prediction,Fmax,i);
     if AnalysisParameters.Prediction.ContactDetection == 3
         %Coord = num2cell(good_X(:,i));
         [external_forces_pred(i).Num_Markers] = Num{i}; % Abscisses des marqueurs en contact par rapport au marqueur origine de la structure

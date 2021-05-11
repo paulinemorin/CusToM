@@ -25,7 +25,8 @@ F_glob=X*Fmax;
 F_glob=diag(F_glob);
 
 for pred = 1:nb
-    FR0= [F_glob(pred);F_glob(pred+nb);F_glob(pred+2*nb)]; 
+    %FR0= [F_glob(pred);F_glob(pred+nb);F_glob(pred+2*nb)]
+    FR0= [F_glob((pred-1)*3+1);F_glob((pred-1)*3+2);F_glob((pred-1)*3+3)]; ; 
     Mp0=cross(Prediction(pred).pos_anim(:),FR0);
     Solid=Prediction(pred).num_solid;
     external_forces_pred(f).fext(Solid).fext=external_forces_pred(f).fext(Solid).fext + [FR0 Mp0];
