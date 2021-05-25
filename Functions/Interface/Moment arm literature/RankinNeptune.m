@@ -49,6 +49,11 @@ if strcmp(mus_name,'TricepsMed')
     RegressionStructure(1).axe='Elbow flexion(+)/extension(-)';
     RegressionStructure(1).coeffs=[-2.02999e-2  -2.15606e-2  3.56484e-2  -1.78502e-2  2.6245e-3]';
 
+    RegressionStructure(2).equation='RRN1';
+    RegressionStructure(2).joints={'Forearm pronation(+)/supination(-)'};
+    RegressionStructure(2).axe='Forearm pronation(+)/supination(-)'; 
+    RegressionStructure(2).coeffs= 0*RegressionStructure(1).coeffs;
+    
     if strcmp(axis,'Elbow flexion(+)/extension(-)')
         [~,ind] = intersect(joints_names,{'Elbow flexion(+)/extension(-)'});
         if length(ind)==1
@@ -56,7 +61,11 @@ if strcmp(mus_name,'TricepsMed')
             coeffs=[-2.02999e-2  -2.15606e-2  3.56484e-2  -1.78502e-2  2.6245e-3]';
             MomentsArm = equationRRN1(coeffs,Q);
         end
+     elseif strcmp(axis,'Forearm pronation(+)/supination(-)') || strcmp(axis,'Forearm pronation(-)/supination(+)') 
+          MomentsArm = zeros(1,size(q,2));
     end
+
+    
 end
 
 
@@ -68,6 +77,11 @@ if strcmp(mus_name,'TricepsLat')
     RegressionStructure(1).axe='Elbow flexion(+)/extension(-)';
     RegressionStructure(1).coeffs=[-2.02999e-2  -2.15606e-2  3.56484e-2  -1.78502e-2  2.6245e-3]';
 
+    RegressionStructure(2).equation='RRN1';
+    RegressionStructure(2).joints={'Forearm pronation(+)/supination(-)'};
+    RegressionStructure(2).axe='Forearm pronation(+)/supination(-)'; 
+    RegressionStructure(2).coeffs= 0*RegressionStructure(1).coeffs;
+    
     if strcmp(axis,'Elbow flexion(+)/extension(-)')
         [~,ind] = intersect(joints_names,{'Elbow flexion(+)/extension(-)'});
         if length(ind)==1
@@ -75,6 +89,8 @@ if strcmp(mus_name,'TricepsLat')
             coeffs=[-2.02999e-2  -2.15606e-2  3.56484e-2  -1.78502e-2  2.6245e-3]';
             MomentsArm = equationRRN1(coeffs,Q);
         end
+    elseif strcmp(axis,'Forearm pronation(+)/supination(-)') || strcmp(axis,'Forearm pronation(-)/supination(+)') 
+          MomentsArm = zeros(1,size(q,2));
     end
 end
 
@@ -88,6 +104,8 @@ if strcmp(mus_name,'TricepsLg')
             coeffs=[  -0.020165080614232  -0.022691141141548   0.038332749164031  -0.020226156396375   0.003321056085587]';
             MomentsArm = equationRRN1(coeffs,Q);
         end
+     elseif strcmp(axis,'Forearm pronation(+)/supination(-)') || strcmp(axis,'Forearm pronation(-)/supination(+)') 
+          MomentsArm = zeros(1,size(q,2));
     elseif strcmp(axis,'GH axial rotation')
         [~,ind1] = intersect(joints_names,{'GH plane of elevation'});
         [~,ind2] = intersect(joints_names,{'Negative GH elevation angle'});
@@ -108,6 +126,11 @@ if strcmp(mus_name,'Anconeus')
     RegressionStructure(1).axe='Elbow flexion(+)/extension(-)';
     RegressionStructure(1).coeffs=[-8.19456E-03  -1.27179E-02   8.20591E-03   2.90914E-03  -2.29252E-03 ]';
 
+    RegressionStructure(2).equation='RRN1';
+    RegressionStructure(2).joints={'Forearm pronation(+)/supination(-)'};
+    RegressionStructure(2).axe='Forearm pronation(+)/supination(-)'; 
+    RegressionStructure(2).coeffs= 0*RegressionStructure(1).coeffs;
+    
     if strcmp(axis,'Elbow flexion(+)/extension(-)')
         [~,ind] = intersect(joints_names,{'Elbow flexion(+)/extension(-)'});
         if length(ind)==1
@@ -115,6 +138,8 @@ if strcmp(mus_name,'Anconeus')
             coeffs=[-8.19456E-03  -1.27179E-02   8.20591E-03   2.90914E-03  -2.29252E-03 ]';
             MomentsArm = equationRRN1(coeffs,Q);
         end
+    elseif strcmp(axis,'Forearm pronation(+)/supination(-)') || strcmp(axis,'Forearm pronation(-)/supination(+)') 
+          MomentsArm = zeros(1,size(q,2));
     end
 end
 
@@ -127,6 +152,11 @@ if strcmp(mus_name,'Brachialis')
     RegressionStructure(1).axe='Elbow flexion(+)/extension(-)';
     RegressionStructure(1).coeffs=[9.84873e-3  1.01630e-2  -2.39557e-2  2.90329e-2  -9.24344e-3]';
 
+    RegressionStructure(2).equation='RRN1';
+    RegressionStructure(2).joints={'Forearm pronation(+)/supination(-)'};
+    RegressionStructure(2).axe='Forearm pronation(+)/supination(-)'; 
+    RegressionStructure(2).coeffs= 0*RegressionStructure(1).coeffs;
+    
     if strcmp(axis,'Elbow flexion(+)/extension(-)')
         [~,ind] = intersect(joints_names,{'Elbow flexion(+)/extension(-)'});
         if length(ind)==1
@@ -134,6 +164,8 @@ if strcmp(mus_name,'Brachialis')
             coeffs=[9.84873e-3  1.01630e-2  -2.39557e-2  2.90329e-2  -9.24344e-3]';
             MomentsArm = equationRRN1(coeffs,Q);
         end
+    elseif strcmp(axis,'Forearm pronation(+)/supination(-)') || strcmp(axis,'Forearm pronation(-)/supination(+)') 
+          MomentsArm = zeros(1,size(q,2));
     end
 end
 

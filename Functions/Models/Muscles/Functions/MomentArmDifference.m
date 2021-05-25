@@ -63,6 +63,8 @@ for j=1:size(Regression,2)
     
     norm_id=norm(ideal_curve_temp);
     
+    if  norm_id
+    
     ideal_curve=[ ideal_curve  ideal_curve_temp];
     
     
@@ -73,6 +75,20 @@ for j=1:size(Regression,2)
     mac_norme=[mac_norme mac_temp];
     
     diff=diff + (norm(mac_temp-ideal_curve_temp,2)/norm_id)^2;
+    
+    else
+            
+    ideal_curve=[ ideal_curve  ideal_curve_temp];
+    
+    
+    mac_temp=mac(decalage: decalage + size(map_q,1) - 1);
+    decalage=decalage+size(map_q,1);
+
+    
+    mac_norme=[mac_norme mac_temp];
+    
+    diff=diff + (norm(mac_temp-ideal_curve_temp,2))^2;
+    end
 
     
 end
