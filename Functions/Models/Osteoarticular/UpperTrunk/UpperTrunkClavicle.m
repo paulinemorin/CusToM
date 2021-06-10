@@ -458,8 +458,8 @@ num_solid=0;
     OsteoArticularModel(incr_solid).mother=s_Thorax;           
     OsteoArticularModel(incr_solid).a=[0 0 1]';
     OsteoArticularModel(incr_solid).joint=1;
-    OsteoArticularModel(incr_solid).limit_inf=-0.1;
-    OsteoArticularModel(incr_solid).limit_sup=0.1;
+    OsteoArticularModel(incr_solid).limit_inf=-0.2;
+    OsteoArticularModel(incr_solid).limit_sup=0.2;
     OsteoArticularModel(incr_solid).Visual=0;
     OsteoArticularModel(incr_solid).m=0;                 
     OsteoArticularModel(incr_solid).b=Thorax_scjJointRightNode';  
@@ -477,8 +477,8 @@ num_solid=0;
     OsteoArticularModel(incr_solid).mother=s_RClavicle_J1;           
     OsteoArticularModel(incr_solid).a=[1 0 0]';
     OsteoArticularModel(incr_solid).joint=1;
-    OsteoArticularModel(incr_solid).limit_inf=-0.2;
-    OsteoArticularModel(incr_solid).limit_sup=pi/3;
+    OsteoArticularModel(incr_solid).limit_inf=-pi/3;
+    OsteoArticularModel(incr_solid).limit_sup=0.2;
     OsteoArticularModel(incr_solid).Visual=0;
     OsteoArticularModel(incr_solid).m=0;                 
     OsteoArticularModel(incr_solid).b=[0 0 0]';  
@@ -506,7 +506,7 @@ num_solid=0;
     OsteoArticularModel(incr_solid).c=[0 0 0]';
     OsteoArticularModel(incr_solid).anat_position=RClavicle_position_set;
     OsteoArticularModel(incr_solid).visual_file = ['Holzbaur/clavicle_r.mat'];
-    OsteoArticularModel(incr_solid).comment='Clavivle Protraction(-)/Retraction(+)';
+    OsteoArticularModel(incr_solid).comment='Clavivle Protraction(+)/Retraction(-)';
 
     
     % Wrapping 1
