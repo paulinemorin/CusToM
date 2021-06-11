@@ -48,6 +48,7 @@ end
 
 %% Getting real markers position from the c3d file
 [real_markers, nb_frame, Firstframe, Lastframe,f_mocap] = Get_real_markers(filename,list_markers, AnalysisParameters); %#ok<ASGLU>
+
 %% Root position
 Base_position=cell(nb_frame,1);
 Base_rotation=cell(nb_frame,1);
@@ -94,26 +95,10 @@ end
 options1 = optimoptions(@fmincon,'Algorithm','interior-point','Display','final','TolFun',1e-6,'MaxFunEvals',10000000,'MaxIter',10000);%,'PlotFcn','optimplotfval' );
 options2 = optimoptions(@fmincon,'Algorithm','interior-point','Display','final','TolFun',1e-6,'MaxFunEvals',2000000,'MaxIter',3000);%,'PlotFcn','optimplotfval' );
 
-q=zeros(nb_solid,nb_frame);
 ceq=zeros(6*nbClosedLoop,nb_frame);
 addpath('Symbolic_function')
 % k=ones(nb_solid,1);
 
-nb_cut=max([Human_model.KinematicsCut]);
-
-Rcut=zeros(3,3,nb_cut);   % initialization of the cut coordinates frames position and orientation
-pcut=zeros(3,1,nb_cut);
-
-
-% Generation of the functions list used in the cost function computation
-list_function=cell(nb_cut,1);
-for c=1:max([Human_model.KinematicsCut])
-    list_function{c}=str2func(sprintf('f%dcut',c));
-end
-list_function_markers=cell(numel(list_markers),1);
-for m=1:numel(list_markers)
-    list_function_markers{m}=str2func(sprintf([list_markers{m} '_Position']));
-end
 
 % Joint limits
 if isfield(BiomechanicalModel,'Generalized_Coordinates')
@@ -137,71 +122,102 @@ else
     l_sup1=[Human_model.limit_sup]';
 end
 
-% Inverse kinematics
+q=zeros(nb_solid,nb_frame);
 h = waitbar(0,['Inverse Kinematics (' filename ')']);
+positions = zeros(3, length(real_markers));
+
 if nbClosedLoop == 0 % if there is no closed loop
-    for f=1:nb_frame
-        if f == 1      % initial value
-            q0=zeros(nb_solid,1);
-            ik_function_objective=@(qvar)CostFunctionSymbolicIK(qvar,nb_cut,real_markers,f,list_function,list_function_markers,Rcut,pcut);
-            [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf1,l_sup1,[],options1);
-        else
-            if f > 2
-                delta=q(:,f-1)-q(:,f-2);
-                q0=q(:,f-1)+delta;
-            else
-                q0=q(:,f-1);
-            end
-            l_inf=max(q(:,f-1)-0.2,l_inf1);
-            l_sup=min(q(:,f-1)+0.2,l_sup1);
-            ik_function_objective=@(qvar)CostFunctionSymbolicIK(qvar,nb_cut,real_markers,f,list_function,list_function_markers,Rcut,pcut);
-            [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf,l_sup,[],options2);
+    f = 1;     % initial value
+    q0=zeros(nb_solid,1);
+        % Precomputation of markers positions at each frame
+        for m=1:length(real_markers)
+            positions(:,m) = real_markers(m).position(f,:)';
         end
+    
+    ik_function_objective=@(qvar)CostFunctionSymbolicIK2(qvar,positions(:));            
+    [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf1,l_sup1,[],options1);
+    f=2;
+    q0=q(:,f-1);
+    % Precomputation of markers positions at each frame
+        for m=1:length(real_markers)
+            positions(:,m) = real_markers(m).position(f,:)';
+        end
+    
+    ik_function_objective=@(qvar)CostFunctionSymbolicIK2(qvar,positions(:));           
+    [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf1,l_sup1,[],options1);
+    
+    for f=3:nb_frame
+        delta=q(:,f-1)-q(:,f-2);
+        q0=q(:,f-1)+delta;
+        l_inf=max(q(:,f-1)-0.2,l_inf1);
+        l_sup=min(q(:,f-1)+0.2,l_sup1);
+        for m=1:length(real_markers)
+            positions(:,m) = real_markers(m).position(f,:)';
+        end
+        
+        ik_function_objective=@(qvar)CostFunctionSymbolicIK2(qvar,positions(:));             
+        [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf,l_sup,[],options2);
+        
         waitbar(f/nb_frame)
     end
 else
-    numqu = BiomechanicalModel.ClosedLoopData.drivingqu;
-    numqv = BiomechanicalModel.ClosedLoopData.drivedqv;
-    startingq0 = BiomechanicalModel.ClosedLoopData.startingq0;
-    Jv =  BiomechanicalModel.ClosedLoopData.Jv;
-    hconstr = BiomechanicalModel.ClosedLoopData.ConstraintEq;
-    
-    
-    for f=1:nb_frame
-        if f == 1      % initial value
-            q0=zeros(nb_solid,1);
-            ik_function_objective=@(qvar)CostFunctionSymbolicIK(qvar,nb_cut,real_markers,f,list_function,list_function_markers,Rcut,pcut);
-            nonlcon=@(qvar)ClosedLoop(qvar,nbClosedLoop);
-            %             q=Generalized_Coordinates.q_dep_map*Generalized_Coordinates.fq_dep(q_red)+Generalized_Coordinates.q_map*q_red;
-            %             nonlcon=@(qvar)NonLinCon_ClosedLoop_Num(Human_model,solid_path1,solid_path2,num_solid,num_markers,qvar,k);
-           [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf1,l_sup1,nonlcon,options1);
-%             [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,-2*pi*ones(size(l_inf1)),2*pi*ones(size(l_inf1)),nonlcon,options1);
-            startingq0 = q(:,f);
-        else
-            if f > 2
-                delta=q(:,f-1)-q(:,f-2);
-                q0=q(:,f-1)+delta;
-            else
-                q0=q(:,f-1);
-            end
-            l_inf=max(q(:,f-1)-0.2,l_inf1);
-            l_sup=min(q(:,f-1)+0.2,l_sup1);
-            ik_function_objective=@(qvar)CostFunctionSymbolicIK(qvar,nb_cut,real_markers,f,list_function,list_function_markers,Rcut,pcut);
-%             nonlcon=@(qvar)NonLinCon_ClosedLoop(qvar,nb_cut,list_function,pcut,Rcut);
-            nonlcon=@(qvar)ClosedLoop(qvar,nbClosedLoop);
-%             nonlcon=@(qvar)NonLinCon_ClosedLoop_Num(Human_model,BiomechanicalModel.Generalized_Coordinates,solid_path1,solid_path2,num_solid,num_markers,qvar,k);
-           [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf,l_sup,nonlcon,options2);
-%             [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,-2*pi*ones(size(l_inf1)),2*pi*ones(size(l_inf1)),nonlcon,options2);
-
-            % Optimization without nonlcon
-            %             q0=q(:,f-1);
-%             startingq0 = q(:,f-1);
-%             ik_function_objective=@(qvar)CostFunctionSymbolicIKandClosedLoop(qvar,nb_cut,real_markers,f,list_function,list_function_markers,Rcut,pcut,startingq0,numqu,numqv,Jv,hconstr);
-%             [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf1,l_sup1,[],options1);
-            
-            
+    %     numqu = BiomechanicalModel.ClosedLoopData.drivingqu;
+    %     numqv = BiomechanicalModel.ClosedLoopData.drivedqv;
+    %     startingq0 = BiomechanicalModel.ClosedLoopData.startingq0;
+    %     Jv =  BiomechanicalModel.ClosedLoopData.Jv;
+    %     hconstr = BiomechanicalModel.ClosedLoopData.ConstraintEq;
+    f=1;
+    % Precomputation of markers positions at each frame
+        for m=1:length(real_markers)
+            positions(:,m) = real_markers(m).position(f,:)';
         end
+    
+    ik_function_objective=@(qvar)CostFunctionSymbolicIK2(qvar,positions(:));            %             nonlcon=@(qvar)NonLinCon_ClosedLoop(qvar,nb_cut,list_function,pcut,Rcut);
+    nonlcon=@(qvar)fCL(qvar);
+    
+    q0=zeros(nb_solid,1);
+    %             q=Generalized_Coordinates.q_dep_map*Generalized_Coordinates.fq_dep(q_red)+Generalized_Coordinates.q_map*q_red;
+    %             nonlcon=@(qvar)NonLinCon_ClosedLoop_Num(Human_model,solid_path1,solid_path2,num_solid,num_markers,qvar,k);
+    [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf1,l_sup1,nonlcon,options1);
+    %             [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,-2*pi*ones(size(l_inf1)),2*pi*ones(size(l_inf1)),nonlcon,options1);
+    %startingq0 = q(:,f);
+    
+    f=2;
+    q0=q(:,f-1);
+    
+    l_inf=max(q(:,f-1)-0.2,l_inf1);
+    l_sup=min(q(:,f-1)+0.2,l_sup1);
+    % Precomputation of markers positions at each frame
+        for m=1:length(real_markers)
+            positions(:,m) = real_markers(m).position(f,:)';
+        end
+    ik_function_objective=@(qvar)CostFunctionSymbolicIK2(qvar,positions(:));    
+    [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf,l_sup,nonlcon,options2);
+    
+    for f=3:nb_frame
+        delta=q(:,f-1)-q(:,f-2);
+        q0=q(:,f-1)+delta;
+        
+        l_inf=max(q(:,f-1)-0.2,l_inf1);
+        l_sup=min(q(:,f-1)+0.2,l_sup1);
+        % Precomputation of markers positions at each frame
+        for m=1:length(real_markers)
+            positions(:,m) = real_markers(m).position(f,:)';
+        end
+        
+        ik_function_objective=@(qvar)CostFunctionSymbolicIK2(qvar,positions(:));
+        %             nonlcon=@(qvar)NonLinCon_ClosedLoop_Num(Human_model,BiomechanicalModel.Generalized_Coordinates,solid_path1,solid_path2,num_solid,num_markers,qvar,k);
+        [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf,l_sup,nonlcon,options2);
+        %             [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,-2*pi*ones(size(l_inf1)),2*pi*ones(size(l_inf1)),nonlcon,options2);
+        
+        % Optimization without nonlcon
+        %             q0=q(:,f-1);
+        %             startingq0 = q(:,f-1);
+        %             ik_function_objective=@(qvar)CostFunctionSymbolicIKandClosedLoop(qvar,nb_cut,real_markers,f,list_function,list_function_markers,Rcut,pcut,startingq0,numqu,numqv,Jv,hconstr);
+        %             [q(:,f)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf1,l_sup1,[],options1);
+        
         waitbar(f/nb_frame)
+        
     end
 end
 close(h)
@@ -214,19 +230,29 @@ end
 
 
 % Error computation
-KinematicsError=zeros(numel(list_markers),nb_frame);
-nb_cut=max([Human_model.KinematicsCut]);
+KinematicsError=zeros(length(real_markers),nb_frame);
+
 
 if nbClosedLoop == 0
     for f=1:nb_frame
-        [KinematicsError(:,f)] = ErrorMarkersIK(q(:,f),nb_cut,real_markers,f,list_markers,Rcut,pcut);
+    % Precomputation of markers positions at each frame
+        for m=1:length(real_markers)
+            positions(:,m) = real_markers(m).position(f,:)';
+        end
+        
+        [KinematicsError(:,f)] = ErrorMarkersIK(q(:,f),positions(:));
     end
 else
     %     nonlcon2=@(qvar)NonLinCon_ClosedLoop(qvar,nb_cut,list_function,pcut,Rcut);
     for f=1:nb_frame
-%         q(:,f) = ForwardKConstrained(q(:,f),startingq0,numqu,numqv,Jv,hconstr);
-%         startingq0 = q(:,f);
-        [KinematicsError(:,f)] = ErrorMarkersIK(q(:,f),nb_cut,real_markers,f,list_markers,Rcut,pcut);
+    % Precomputation of markers positions at each frame
+        for m=1:length(real_markers)
+            positions(:,m) = real_markers(m).position(f,:)';
+        end
+        
+        [KinematicsError(:,f)] = ErrorMarkersIK(q(:,f),positions(:));
+        %         q(:,f) = ForwardKConstrained(q(:,f),startingq0,numqu,numqv,Jv,hconstr);
+        %         startingq0 = q(:,f);
         [~,ceq(:,f)]=nonlcon(q(:,f));
         %         [~,ceq2(:,f)]=nonlcon2(q(:,f));
     end
