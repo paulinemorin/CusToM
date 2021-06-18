@@ -106,22 +106,17 @@ KT=ConstraintsJacobian(BiomechanicalModel,q(:,1),solid_path1,solid_path2,num_sol
 
 lambda = zeros(size(KT,2),1);
 
-if isempty(lambda)
-    idxj = [38 39 40 41]; % BO : elbow to hand
-else
-    idxj = 38:47; % BF : elbow to hand
-end
-
-
-%G = null(KT(idxj,:)');
+ %% For the model with right arm only and no skull
+idxj = 23:26;
+G = null(KT(idxj,:)');
 %G=eye(size(KT));
-% Moment arms and Active forces
-% Aeq = G'*R(idq,:,1).*Fa(:,1)' ;
+%Moment arms and Active forces
+Aeq = G'*R(idxj,:,1).*Fmax(:,1)' ;
 %Aeq = [G'*R(idxj,:,1).*Fmax' , G'*KT(idxj,:)] ;
-Aeq = [R(idxj,:,1).*Fmax' , KT(idxj,:)] ;
+%Aeq = [R(idxj,:,1).*Fmax' , KT(idxj,:)] ;
 % Joint Torques
-%beq = G'*(torques(idq,1) - R(idq,:,1)*Fp(:,1));
-beq = torques(idxj,1);
+beq = G'*(torques(idxj,1));
+%beq = torques(idxj,1);
 % First frame optimization
 
 Amin = [Amin; -inf*ones(size(lambda))];
@@ -139,15 +134,15 @@ waitbar(1/Nb_frames)
 for i=2:Nb_frames % for following frames
     % Closed-loop constraints
     KT=ConstraintsJacobian(BiomechanicalModel,q(:,i),solid_path1,solid_path2,num_solid,num_markers,ones(size(q,1),1),0.0001,dependancies)';
-    %G = null(KT(idxj,:)');
+    G = null(KT(idxj,:)');
     %G=eye(size(KT));
 
     % Moment arms and Active forces
-   % Aeq = G'*R(idq,:,i).*Fa(:,i)';
-    Aeq = [R(idxj,:,i).*Fmax' , KT(idxj,:)] ;
+    Aeq = G'*R(idxj,:,i).*Fmax';
+   % Aeq = [R(idxj,:,i).*Fmax' , KT(idxj,:)] ;
     % Joint Torques
-%    beq=G'*(torques(idq,i)- R(idq,:,1)*Fp(:,i));
-    beq=torques(idxj,i);
+    beq=G'*(torques(idxj,i));
+%    beq=torques(idxj,i);
     % Optimization
 %    [Aopt(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options2, AnalysisParameters.Muscles.CostfunctionOptions, Fa(:,i), Fmax);
     [X(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options1, AnalysisParameters.Muscles.CostfunctionOptions, Fmax, Fmax);
