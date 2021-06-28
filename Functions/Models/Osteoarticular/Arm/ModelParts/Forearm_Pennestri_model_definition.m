@@ -130,7 +130,6 @@ Radius_origin =Mirror*Forearm_osim2antoine'.*[0.0004 -0.011503 0.019999]';
 %CoM_radius = [ 0.0336341  -0.181559   0.0156]' - [0.0004 -0.011503 0.019999]' ;
 %CoM_ulna = [ 0.00971783  -0.0959509  0.024286]';
 
-
 % % ------------------------- Radius ----------------------------------------
 % Radius_ElbowJointNode = Pennestri2custom* [-dr 0 0]';
 % Radius_WristJointNode = Pennestri2custom* [er 0 0]';
@@ -277,7 +276,7 @@ Human_model(incr_solid).mother=s_mother;
 Human_model(incr_solid).a=Zrot;
 Human_model(incr_solid).joint=1;
 Human_model(incr_solid).limit_inf=0;
-Human_model(incr_solid).limit_sup=100*pi/180;
+Human_model(incr_solid).limit_sup=180*pi/180;
 Human_model(incr_solid).ActiveJoint=1;
 Human_model(incr_solid).m=0;
 Human_model(incr_solid).b=pos_attachment_pt;
