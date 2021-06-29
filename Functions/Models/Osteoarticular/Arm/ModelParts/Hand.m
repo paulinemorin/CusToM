@@ -133,13 +133,69 @@ Hand_position_set= {...
     [Signe 'HandPrediction10'], k*Mirror*[0.015 -0.06 0.03]';...
     [Signe 'HandPrediction11'], k*Mirror*[0.015 -0.01 0.05]';...
     % Muscles extracted from (Pennestri et al., 2007)
-    [Signe 'Hand_CubitalisAnterior_i'],Pennestri2custom*[0.006 0.0027 0.007]'+Hand_WristJointNode';
-    [Signe 'Hand_FlexorCarpiUlnaris_i'],Pennestri2custom*[0.005 0.03 0.007]'+Hand_WristJointNode';
-    [Signe 'Hand_ExtensorCarpiUlnaris_i'],Pennestri2custom*[0.005 0.03 -0.007]'+Hand_WristJointNode';
-    [Signe 'Hand_ExtensorDigitorum_i'],Pennestri2custom*[0.038 0 -0.01]'+Hand_WristJointNode';
-    [Signe 'Hand_FlexorDigitorumSuperior_i'],Pennestri2custom*[0.005 -0.018 -0.006]'+Hand_WristJointNode';
-    [Signe 'Hand_FlexorCapriRadialis_i'],Pennestri2custom*[0.003 0.012 0.005]'+Hand_WristJointNode';
-    [Signe 'Hand_AbductorDigitiV_i'],Pennestri2custom*[0.01 -0.018 -0.007]'+Hand_WristJointNode';
+    
+    % [Signe 'Hand_CubitalisAnterior_i'],Pennestri2custom*[0.006 0.0027 0.007]'+Hand_WristJointNode';
+    %[Signe 'Hand_FlexorCarpiUlnaris_i'],Pennestri2custom*[0.005 0.03
+    %0.007]'+Hand_WristJointNode'+k*Mirror*[0.01 0 0.02]'; %Addition of a correction
+    %    [Signe 'Hand_ExtensorCarpiUlnaris_i'],Pennestri2custom*[0.005 0.03 -0.007]'+Hand_WristJointNode'+k*Mirror*[-0.008 0.003 0]';%Addition of a correction
+    %[Signe 'Hand_ExtensorDigitorum_i'],Pennestri2custom*[0.038 0 -0.01]'+Hand_WristJointNode';%+k*Mirror*[-0.02 0.03 -0.005]';%Addition of a correction
+    %    [Signe 'Hand_FlexorDigitorumSuperior_i'],Pennestri2custom*[0.005 -0.018 -0.006]'+Hand_WristJointNode'+k*Mirror*[0.07 -0.015 -0.02]';%Addition of a correction
+    % [Signe 'Hand_FlexorCapriRadialis_i'],Pennestri2custom*[0.003 0.012 0.005]'+Hand_WristJointNode'+k*Mirror*[0.01 0 0.02]';%Addition of a correction
+    % [Signe 'Hand_AbductorDigitiV_i'],Pennestri2custom*[0.01 -0.018 -0.007]'+Hand_WristJointNode';
+    
+    
+    
+    
+    % Muscles from Holzbaur model : They are ok but not used. To be decommented to be used. 
+    
+%     [Signe 'Hand_ExtensorCarpiRadialisLongus_i'],Mirror*osim2antoine'.*([0.01717;-0.02122;0.00583])  + Wrist_origin...
+%    + Hand_WristJointNode';...
+%         [Signe 'Hand_ExtensorCarpiRadialisBrevis_i'],Mirror*osim2antoine'.*([0.005;-0.01136;0.0085])  + Wrist_origin...
+%    + Hand_WristJointNode';...
+%         [Signe 'Hand_ExtensorCarpiUlnaris_i'],Mirror*osim2antoine'.*([-0.02251;-0.01401;-0.00128] )  + Wrist_origin ...
+%    + Hand_WristJointNode';...
+%     [Signe 'Hand_FlexorCarpiRadialis_i'],Mirror*osim2antoine'.*([0.01124;-0.01844;-0.00418] )  + Wrist_origin ...
+%    + Hand_WristJointNode';...
+%     [Signe 'Hand_FlexorCarpiUlnaris_i'],Mirror*osim2antoine'.*([-0.02036;-0.01765;-0.00752])  + Wrist_origin ...
+%    + Hand_WristJointNode';...
+%     [Signe 'Hand_PalmarisLongus_i'],Mirror*osim2antoine'.*([0.00227;-0.03096;0.00493] )  + Wrist_origin ...
+%    + Hand_WristJointNode';...
+%     
+
+    % Muscles from moment arm and musculotendon length optimization
+
+    [Signe 'Hand_ExtensorCarpiRadialisLongusBF_VP4'], k*Mirror*[-0.0245 ; 0.0353 ; 0.0191];... 
+    [Signe 'Hand_ExtensorCarpiRadialisLongusBF_i'],  k*Mirror*[-0.0084 ; 0.0309 ; 0.0153] ;... 
+    [Signe 'Hand_ExtensorCarpiRadialisBrevisBF_VP4'],k*Mirror*[-0.0277 ; 0.0312 ; 0.0141];... 
+    [Signe 'Hand_ExtensorCarpiRadialisBrevisBF_i'], k*Mirror*[-0.0277 ; 0.0312 ; 0.0141] ;... 
+    [Signe 'Hand_ExtensorCarpiUlnarisBF_VP4'], k*Mirror*[-0.0091 ; 0.0528 ; -0.0253];... 
+    [Signe 'Hand_ExtensorCarpiUlnarisBF_i'], k*Mirror*[-0.0074 ; 0.0528 ; -0.0380] ;... 
+    [Signe 'Hand_FlexorCarpiUlnarisBF_VP4'], k*Mirror*[0.0256 ; 0.0425 ; -0.0177] ;... 
+    [Signe 'Hand_FlexorCarpiUlnarisBF_i'], k*Mirror*[-0.0043 ; 0.0306 ; -0.0088];... 
+    [Signe 'Hand_FlexorCarpiRadialisBF_VP4'], k*Mirror*[0.0296 ; 0.0528 ; 0.0096] ;... 
+    [Signe 'Hand_FlexorCarpiRadialisBF_i'], k*Mirror*[0.0120 ; 0.0188 ; -0.0045]  ;... 
+    [Signe 'Hand_PalmarisLongusBF_VP4'], k*Mirror*[0.0195 ; 0.0334 ; 0.0042];... 
+    [Signe 'Hand_PalmarisLongusBF_i'], k*Mirror*[-0.0035 ; 0.0010 ; 0.0095] ;... 
+    
+    
+    [Signe 'Hand_ExtensorCarpiRadialisLongusBO_VP4'], k*Mirror*[-0.0293 ; 0.0229 ; 0.0103];... 
+    [Signe 'Hand_ExtensorCarpiRadialisLongusBO_i'],  k*Mirror*[-0.0175 ; 0.0229 ; 0.0098];... 
+    
+    [Signe 'Hand_ExtensorCarpiRadialisBrevisBO_VP4'],k*Mirror*[-0.0281 ; 0.0310 ; 0.0133];... 
+    [Signe 'Hand_ExtensorCarpiRadialisBrevisBO_i'], k*Mirror*[-0.0281 ; 0.0310 ; 0.0133];... 
+    
+    [Signe 'Hand_ExtensorCarpiUlnarisBO_VP4'], k*Mirror*[-0.0083 ; 0.0528 ; -0.0297];... 
+    [Signe 'Hand_ExtensorCarpiUlnarisBO_i'], k*Mirror*[-0.0084 ; 0.0527 ; -0.0295];... 
+    
+    [Signe 'Hand_FlexorCarpiUlnarisBO_VP4'], k*Mirror*[0.0249 ; 0.0258 ; -0.0181];... 
+    [Signe 'Hand_FlexorCarpiUlnarisBO_i'], k*Mirror*[0.0061 ; 0.0258 ; -0.0122];... 
+    
+    [Signe 'Hand_FlexorCarpiRadialisBO_VP4'], k*Mirror*[0.0183 ; 0.0267 ; 0.0123];... 
+    [Signe 'Hand_FlexorCarpiRadialisBO_i'], k*Mirror*[0.0163 ; 0.0257 ; 0.0032] ;... 
+    
+    [Signe 'Hand_PalmarisLongusBO_VP4'], k*Mirror*[0.0253 ; 0.0291 ; 0.0033];... 
+    [Signe 'Hand_PalmarisLongusBO_i'], k*Mirror*[0.0007 ; 0.0107 ; 0.0084];... 
+
     };
 
 
@@ -154,48 +210,42 @@ Hand_position_set= {...
 
 num_solid=0;
 %% Hand
-    % Wrist_J1
-    num_solid=num_solid+1;        % number of the solid ...
-    name=list_solid{num_solid}; % name of the solid
-    eval(['incr_solid=s_' name ';'])  % number of the solid in the model
-    OsteoArticularModel(incr_solid).name=[Signe name];
-    OsteoArticularModel(incr_solid).sister=0;                
-    OsteoArticularModel(incr_solid).child=s_Hand;                   
-    OsteoArticularModel(incr_solid).mother=s_mother;           
-    OsteoArticularModel(incr_solid).a=[0 0 1]';
-    OsteoArticularModel(incr_solid).joint=1;
-    OsteoArticularModel(incr_solid).limit_inf=-pi/2;
-    OsteoArticularModel(incr_solid).limit_sup=pi/2;
-    OsteoArticularModel(incr_solid).m=0;                 
-    OsteoArticularModel(incr_solid).b=pos_attachment_pt;  
-    OsteoArticularModel(incr_solid).I=zeros(3,3);
-    OsteoArticularModel(incr_solid).c=[0 0 0]';
-    OsteoArticularModel(incr_solid).Visual=0;
-    
-    % Hand
-    num_solid=num_solid+1;        % number of the solid ...
-    name=list_solid{num_solid}; % name of the solid
-    eval(['incr_solid=s_' name ';'])  % number of the solid in the model
-    OsteoArticularModel(incr_solid).name=[Signe name];
-    OsteoArticularModel(incr_solid).sister=0;    
-    OsteoArticularModel(incr_solid).child=0;
-    OsteoArticularModel(incr_solid).mother=s_Wrist_J1;
-    OsteoArticularModel(incr_solid).a=[1 0 0]';
-    OsteoArticularModel(incr_solid).joint=1;
-    if Signe == 'R'
-        OsteoArticularModel(incr_solid).limit_inf=-pi/4;
-        OsteoArticularModel(incr_solid).limit_sup=pi/2;
-    else
-        OsteoArticularModel(incr_solid).limit_inf=-pi/2;
-        OsteoArticularModel(incr_solid).limit_sup=pi/4;
-    end
-    OsteoArticularModel(incr_solid).m=Mass.Hand_Mass;
-    OsteoArticularModel(incr_solid).b=[0 0 0]';
-    OsteoArticularModel(incr_solid).I=[I_Hand(1) I_Hand(4) I_Hand(5); I_Hand(4) I_Hand(2) I_Hand(6); I_Hand(5) I_Hand(6) I_Hand(3)];
-    OsteoArticularModel(incr_solid).c=-Hand_WristJointNode';
-    OsteoArticularModel(incr_solid).anat_position=Hand_position_set;
-    OsteoArticularModel(incr_solid).Visual=1;
-    OsteoArticularModel(incr_solid).visual_file = ['Holzbaur/hand_' Signe '.mat'];
-    OsteoArticularModel(incr_solid).L={[Signe 'Hand_WristJointNode'];[Signe 'Hand_EndNode']};
+% Wrist_J1
+num_solid=num_solid+1;        % number of the solid ...
+name=list_solid{num_solid}; % name of the solid
+eval(['incr_solid=s_' name ';'])  % number of the solid in the model
+OsteoArticularModel(incr_solid).name=[Signe name];
+OsteoArticularModel(incr_solid).sister=0;
+OsteoArticularModel(incr_solid).child=s_Hand;
+OsteoArticularModel(incr_solid).mother=s_mother;
+OsteoArticularModel(incr_solid).a=[0 0 1]';
+OsteoArticularModel(incr_solid).joint=1;
+OsteoArticularModel(incr_solid).limit_inf=-90*pi/180;
+OsteoArticularModel(incr_solid).limit_sup=90*pi/180;
+OsteoArticularModel(incr_solid).m=0;
+OsteoArticularModel(incr_solid).b=pos_attachment_pt;
+OsteoArticularModel(incr_solid).I=zeros(3,3);
+OsteoArticularModel(incr_solid).c=[0 0 0]';
+OsteoArticularModel(incr_solid).Visual=0;
+OsteoArticularModel(incr_solid).FunctionalAngle='Wrist flexion(+)/extension(-)' ;
 
+
+% Hand
+num_solid=num_solid+1;        % number of the solid ...
+name=list_solid{num_solid}; % name of the solid
+eval(['incr_solid=s_' name ';'])  % number of the solid in the model
+OsteoArticularModel(incr_solid).name=[Signe name];
+OsteoArticularModel(incr_solid).sister=0;
+OsteoArticularModel(incr_solid).child=0;
+OsteoArticularModel(incr_solid).mother=s_Wrist_J1;
+OsteoArticularModel(incr_solid).a=[1 0 0]';
+OsteoArticularModel(incr_solid).joint=1;
+if Signe == 'R'
+    OsteoArticularModel(incr_solid).limit_inf=-45*pi/180;
+    OsteoArticularModel(incr_solid).limit_sup=90*pi/180;
+    OsteoArticularModel(incr_solid).FunctionalAngle='Wrist deviation ulnar(+)/radial(-)' ;
+else
+    OsteoArticularModel(incr_solid).limit_inf=-90*pi/180;
+    OsteoArticularModel(incr_solid).limit_sup=45*pi/180;
+    OsteoArticularModel(incr_solid).FunctionalAngle='Wrist deviation ulnar(-)/radial(+)' ;
 end

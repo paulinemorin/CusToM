@@ -54,6 +54,7 @@ for k=1:length(row)
     Lmdq = Muscle_lengthNum(Human_model,Muscles(idxm(j)),q-dq);
 
     R(j,i)=(-Lpdq+Lmdq)/(2*dp); % it is -dl/dq
+ %   end
 end
 % beware that the matrix is finally nq*nm
 R=R';

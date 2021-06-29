@@ -99,8 +99,10 @@ end
 
 weights = AnalysisParameters.IK.weights';
 
+
 h = waitbar(0,['Inverse Kinematics (' filename ')']);
 % 1st frame : classical optimization
+
 
 if ~isfield(BiomechanicalModel,'ClosedLoopData')
     q0=zeros(nb_solid,1);
@@ -112,7 +114,7 @@ if ~isfield(BiomechanicalModel,'ClosedLoopData')
     
     ik_function_objective=@(qvar)CostFunctionSymbolicIK2(qvar,positions(:),weights);
     [q(:,1)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf1,l_sup1,[],options1);
-    hclosedloophandle =@(x) 0 ;
+    hclosedloophandle = @(x) Aeq_ik*x - beq_ik   ;
 else
     q0=zeros(nb_solid,1);
     positions = zeros(3, length(real_markers));
@@ -124,7 +126,7 @@ else
     ik_function_objective=@(qvar)CostFunctionSymbolicIK2(qvar, positions(:),weights);
     nonlcon=@(qvar)ClosedLoop(qvar);
     [q(:,1)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf1,l_sup1,nonlcon,options1);
-    hclosedloophandle = BiomechanicalModel.ClosedLoopData.ConstraintEq;
+    hclosedloophandle = [BiomechanicalModel.ClosedLoopData.ConstraintEq;  @(x) Aeq_ik*x - beq_ik] ;
 end
 
 buteehandle = @(q)  Limits(q,l_inf1,l_sup1);
