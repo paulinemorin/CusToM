@@ -97,6 +97,7 @@ else
     l_sup1=[Human_model.limit_sup]';
 end
 
+weights = AnalysisParameters.IK.weights';
 
 h = waitbar(0,['Inverse Kinematics (' filename ')']);
 % 1st frame : classical optimization
@@ -109,7 +110,7 @@ if ~isfield(BiomechanicalModel,'ClosedLoopData')
         positions(:,m) = real_markers(m).position(1,:)';
     end
     
-    ik_function_objective=@(qvar)CostFunctionSymbolicIK2(qvar,positions(:));
+    ik_function_objective=@(qvar)CostFunctionSymbolicIK2(qvar,positions(:),weights);
     [q(:,1)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf1,l_sup1,[],options1);
     hclosedloophandle =@(x) 0 ;
 else
@@ -120,7 +121,7 @@ else
         positions(:,m) = real_markers(m).position(1,:)';
     end
     
-    ik_function_objective=@(qvar)CostFunctionSymbolicIK2(qvar, positions(:));
+    ik_function_objective=@(qvar)CostFunctionSymbolicIK2(qvar, positions(:),weights);
     nonlcon=@(qvar)ClosedLoop(qvar);
     [q(:,1)] = fmincon(ik_function_objective,q0,[],[],Aeq_ik,beq_ik,l_inf1,l_sup1,nonlcon,options1);
     hclosedloophandle = BiomechanicalModel.ClosedLoopData.ConstraintEq;
@@ -141,7 +142,7 @@ for f = 2:nb_frame
         positions(:,m) = real_markers(m).position(f,:)';
     end
     
-    fun = @(q) CostFunctionLM(q,positions(:),gamma,hclosedloophandle,zeta,buteehandle);
+    fun = @(q) CostFunctionLM(q,positions(:),gamma,hclosedloophandle,zeta,buteehandle,weights);
     q(:,f)= lsqnonlin(fun,q(:,f-1),[],[],optionsLM);
     
     waitbar(f/nb_frame)
