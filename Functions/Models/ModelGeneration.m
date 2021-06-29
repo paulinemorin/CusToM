@@ -74,15 +74,15 @@ catch
 end
 
 %% Right arm
-%try
-    [OsteoArticularModel]= ModelParameters.RightArm(OsteoArticularModel,k,'R',Mass,'Thorax_ShoulderRightNode',ModelParameters.UpperTrunk);
-%catch
-   % EnableModel(5) = 1;
-%end    
+try
+    [OsteoArticularModel]= ModelParameters.RightArm(OsteoArticularModel,k,'R',Mass,'Thorax_ShoulderRightNode');
+catch
+    EnableModel(5) = 1;
+end    
 
 %% Left arm
 try
-    [OsteoArticularModel]= ModelParameters.LeftArm(OsteoArticularModel,k,'L',Mass,'Thorax_ShoulderLeftNode',ModelParameters.UpperTrunk);
+    [OsteoArticularModel]= ModelParameters.LeftArm(OsteoArticularModel,k,'L',Mass,'Thorax_ShoulderLeftNode');
 catch
     EnableModel(6) = 1;
 end
