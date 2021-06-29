@@ -96,17 +96,6 @@ Ulna_HumerusJointNode = (k*[0 0.1088 0])*Mirror;
 Ulna_RadiusJointNode = (k*[0 -0.1430 0])*Mirror;
 
 
-% Vector between RadiusElbow and UlnaElbow
-Radius_Ulna_distal = (k*[0 0 -0.0382])*Mirror;
-
-% ------------------------- Definition of rotation axis
-Pro_supi_axis= Radius_ElbowJointNode - Radius_UlnaJointNode;
-Pro_supi_axis=Pro_supi_axis'/norm(Pro_supi_axis);
-Zrot=[0;0;1];
-Xrot=cross(Pro_supi_axis,Zrot);
-Xrot=Xrot'/norm(Xrot);
-
-
 % Adaptation of (Pennestri et al., 2007) node positions
 dr = 0.159;
 er = 0.081;
@@ -114,14 +103,9 @@ cr = 0.071;
 du = 0.078;
 L_forearm = 0.2628;
 k_Pennestri2custom = L_forearm/(cr+dr)*k*Mirror; % Forearm length homothety
-%k_Pennestri2custom = L_forearm/(cr+dr)*k; % Forearm length homothety
 Pennestri2custom = k_Pennestri2custom*[0 0 1;-1 0 0;0 -1 0];
-%Pennestri2custom = [0 0 1;-1 0 0;0 -1 0];
 bh = 2*0.0191/(L_forearm/(cr+dr));
 
-% From OpenSim
-Forearm_osim2antoine = [k (Radius_ElbowJointNode(2)-Radius_WristJointNode(2))/0.23559 k];
-Radius_origin =Mirror*Forearm_osim2antoine'.*[0.0004 -0.011503 0.019999]';
 
 
 % From OpenSim
@@ -147,16 +131,14 @@ Radius_position_set = {...
     [Signe 'WRA'], k*Mirror*[0 -0.09 0.03]'; ...
     [Signe 'Forearm_WristJointNode'], Radius_WristJointNode'; ...
     [Signe 'Radius_UlnaJointNode'], Radius_UlnaJointNode';
-    
-    % Muscles from Pennestrì model
-    
- %   [Signe 'Radius_SupinatorBrevis_i'], Radius_ElbowJointNode'+Pennestri2custom*[0.028 0.01 -0.01]';...
-  %  [Signe 'Radius_Brachialis_i'],Radius_ElbowJointNode'+Pennestri2custom*[0.033 0.005 0.001]';...  
- %   [Signe 'Radius_Brachioradialis_i'], Radius_ElbowJointNode'+L_forearm/(cr+dr)*k*[0 0 -1;-1 0 0;0 -1 0]*[0.238 -0.012 0]';...
-  %   [Signe 'Radius_PronatorTeres_i'], Radius_ElbowJointNode'+k_Pennestri2custom*[0 0 -1;-1 0 0;0 -1 0]*[0.055 -0.011 0.024];... 
-  %   [Signe 'Radius_PronatorQuadrus_i'], Radius_ElbowJointNode'+k_Pennestri2custom*[0 0 -1;-1 0 0;0 -1 0]*[0.236 -0.005 0.012]';...
+    [Signe 'Radius_SupinatorBrevis_i'], Radius_ElbowJointNode'+Pennestri2custom*[0.028 0.01 -0.01]';...
+    [Signe 'Radius_Brachialis_i'],Radius_ElbowJointNode'+Pennestri2custom*[0.033 0.005 0.001]';...
+    [Signe 'Radius_Brachioradialis_i'], Radius_ElbowJointNode'+Pennestri2custom*[0.238 -0.012 0]';...
+    [Signe 'Radius_PronatorTeres_i'], Radius_ElbowJointNode'+Pennestri2custom*[0.055 -0.011 0.024]';...
+    [Signe 'Radius_PronatorQuadrus_i'], Radius_ElbowJointNode'+Pennestri2custom*[0.236 -0.005 0.012]';...
 %     [Signe 'Radius_TricepsBrachii2_o'], Radius_ElbowJointNode'+Pennestri2custom*[-0.025 0.02 -0.02]';...
-%     [Signe 'Thorax_TricepsBrachii2_i'],Radius_ElbowJointNode'+Pennestri2custom*[0.038 0.027 -0.02]';...
+    [Signe 'Thorax_TricepsBrachii2_i'],Radius_ElbowJointNode'+Pennestri2custom*[0.038 0.027 -0.02]';...
+    };
 
     
     % Muscles from Holzbaur model 
@@ -200,21 +182,17 @@ Radius_position_set = {...
  };
 
 Ulna_position_set = {...
-    [Signe 'WRB'], k*Mirror*[0 -0.1570 0]'; ...
-    
-        % Muscles from Pennestrì model
+    [Signe 'WRB'], Pennestri2custom*[0 -0.1570 0]'; ...
+    [Signe 'Ulna_SupinatorBrevis_o'], Ulna_HumerusJointNode'+Pennestri2custom*[-0.013 -0.027 -0.012]';...
+    [Signe 'Ulna_AbductorDigitiV_o'], Ulna_HumerusJointNode'+Pennestri2custom*[0.115 -0.015 -0.005]';...
+    [Signe 'Ulna_PronatorQuadrus_o'], Ulna_HumerusJointNode'+Pennestri2custom*[0.2 0.012 0.009]';...
+    [Signe 'Ulna_TricepsBrachii1_i'], Ulna_HumerusJointNode'+Pennestri2custom*[0.038 -0.027 -0.015]';...
+    [Signe 'Ulna_Anconeus_i'], Ulna_HumerusJointNode'+Pennestri2custom*[0.042 0.012 0.029]';...
+%     [Signe 'Ulna_BicepsBrachii1_o'], Ulna_HumerusJointNode'-Pennestri2custom*[0 -0.015 0.01]';...
+    [Signe 'Thorax_BicepsBrachii1_i'],Ulna_HumerusJointNode'+Pennestri2custom*[0.038 0 0.01]';...
+    };
 
-   % [Signe 'Ulna_SupinatorBrevis_o'], Ulna_HumerusJointNode'+Pennestri2custom*[-0.013 -0.027 -0.012]' + k*Mirror*[0  0 0.02]';... % with manual correction
-    %[Signe 'Ulna_AbductorDigitiV_o'], Ulna_HumerusJointNode'+Pennestri2custom*[0.115 -0.015 -0.005]';...
-    %[Signe 'Ulna_PronatorQuadratus_o'], Ulna_HumerusJointNode'+Pennestri2custom*[0.2 0.012 0.009]';...
-  %  [Signe 'Ulna_TricepsBrachii1_i'], Ulna_HumerusJointNode'+Pennestri2custom*[0.038 -0.027 -0.015]';...
-    %[Signe 'Ulna_Triceps_i'], Ulna_HumerusJointNode'+Pennestri2custom*[0.038 -0.027 -0.015]'+ k*Mirror*[-0.01  0.03 0]';...% with manual correction
-    %[Signe 'Ulna_Anconeus_i'], Ulna_HumerusJointNode'+Pennestri2custom*[0.042 0.012 0.029]'+ k*Mirror*[0  0 -0.02]';...
-    %[Signe 'Ulna_BicepsBrachii1_o'], Ulna_HumerusJointNode'-Pennestri2custom*[0 -0.015 0.01]';...
-    %[Signe 'Thorax_BicepsBrachii1_i'],Ulna_HumerusJointNode'+Pennestri2custom*[0.038 0 0.01]';...
-   % [Signe 'Ulna_TricepsMed_i'], Ulna_HumerusJointNode'+Pennestri2custom*[0.038 -0.027 -0.015]';...
 
-        % Muscles from Holzbaur model
 
 %         [Signe 'Ulna_TricepsLat_i'],Mirror*Forearm_osim2antoine'.*([-0.0219;0.01046;-0.00078])+Ulna_HumerusJointNode' ;...
 %         [Signe 'Ulna_TricepsMed_i'],Mirror*Forearm_osim2antoine'.*([-0.0219;0.01046;-0.00078])+Ulna_HumerusJointNode'  ;...
@@ -273,7 +251,7 @@ Human_model(incr_solid).name=[Signe name];
 Human_model(incr_solid).sister=s_Ulna;
 Human_model(incr_solid).child=s_Radius_J2;
 Human_model(incr_solid).mother=s_mother;
-Human_model(incr_solid).a=Zrot;
+Human_model(incr_solid).a=[0 0 1]';
 Human_model(incr_solid).joint=1;
 Human_model(incr_solid).limit_inf=0;
 Human_model(incr_solid).limit_sup=180*pi/180;
@@ -283,7 +261,6 @@ Human_model(incr_solid).b=pos_attachment_pt;
 Human_model(incr_solid).I=zeros(3,3);
 Human_model(incr_solid).c=[0 0 0]';
 Human_model(incr_solid).Visual=0;
-Human_model(incr_solid).FunctionalAngle='Elbow flexion(+)/extension(-)' ;
 
 % Radius_J2
 num_solid=num_solid+1;        % solide num�ro ...
@@ -293,7 +270,7 @@ Human_model(incr_solid).name=[Signe name];
 Human_model(incr_solid).sister=0;
 Human_model(incr_solid).child=s_Radius;
 Human_model(incr_solid).mother=s_Radius_J1;
-Human_model(incr_solid).a=Xrot';
+Human_model(incr_solid).a=[1 0 0]';
 Human_model(incr_solid).joint=1;
 Human_model(incr_solid).limit_inf=-pi/4;
 Human_model(incr_solid).limit_sup=pi/4;
@@ -303,7 +280,6 @@ Human_model(incr_solid).b=[0 0 0]';
 Human_model(incr_solid).I=zeros(3,3);
 Human_model(incr_solid).c=[0 0 0]';
 Human_model(incr_solid).Visual=0;
-Human_model(incr_solid).FunctionalAngle=' ' ;
 
 % Radius
 num_solid=num_solid+1;        % solide num�ro ...
@@ -313,16 +289,14 @@ Human_model(incr_solid).name=[Signe name];
 Human_model(incr_solid).sister=0;
 Human_model(incr_solid).child=0;
 Human_model(incr_solid).mother=s_Radius_J2;
-Human_model(incr_solid).a=Pro_supi_axis;
+Human_model(incr_solid).a=[0 1 0]';
 Human_model(incr_solid).joint=1;
 if Signe == 'R'
-    Human_model(incr_solid).limit_inf=-pi/2;
-    Human_model(incr_solid).limit_sup=pi/2;
-    Human_model(incr_solid).FunctionalAngle='Forearm pronation(+)/supination(-)';
+    Human_model(incr_solid).limit_inf=0;
+    Human_model(incr_solid).limit_sup=pi;
 else
-    Human_model(incr_solid).limit_inf=-pi/2;
-    Human_model(incr_solid).limit_sup=pi/2;
-    Human_model(incr_solid).FunctionalAngle='Forearm pronation(-)/supination(+)';
+    Human_model(incr_solid).limit_inf=-pi;
+    Human_model(incr_solid).limit_sup=0;
 end
 Human_model(incr_solid).ActiveJoint=1;
 Human_model(incr_solid).m=Radius_Mass;
@@ -332,21 +306,6 @@ Human_model(incr_solid).I=[I_Radius(1) I_Radius(4) I_Radius(5); I_Radius(4) I_Ra
 Human_model(incr_solid).c=-Radius_ElbowJointNode';
 Human_model(incr_solid).anat_position=Radius_position_set;
 Human_model(incr_solid).Visual=1;
-Human_model(incr_solid).density=1.13; %kg.L-1
-
-
-% Wrapping 1
-% Human_model(incr_solid).wrap(1).name=['Wrap' Signe 'RadiusQuadratus'];
-% Human_model(incr_solid).wrap(1).anat_position=['Wrap' Signe 'RadiusQuadratus'];
-% Human_model(incr_solid).wrap(1).type='C'; % C: Cylinder or S: Sphere
-% Human_model(incr_solid).wrap(1).radius=k*0.01;
-% Human_model(incr_solid).wrap(1).R=[ -0.8998    0.4361   -0.0127;
-%                                             0.0046    0.0387    0.9992;
-%                                             0.4363    0.8990   -0.0368];
-% Human_model(incr_solid).wrap(1).location=Mirror*[0.0281 -0.1986 0.0288]'+Radius_ElbowJointNode';
-% Human_model(incr_solid).wrap(1).h=k*0.1;
-% Human_model(incr_solid).wrap(1).num_solid=incr_solid;
-
 
 %% Ulna
 
@@ -361,7 +320,7 @@ Human_model(incr_solid).mother=s_mother;
 Human_model(incr_solid).a=[0 0 1]';
 Human_model(incr_solid).joint=1;
 Human_model(incr_solid).limit_inf=0;
-Human_model(incr_solid).limit_sup=pi*100/180;
+Human_model(incr_solid).limit_sup=pi;
 Human_model(incr_solid).m=Ulna_Mass;
 Human_model(incr_solid).I=[I_Ulna(1) I_Ulna(4) I_Ulna(5); I_Ulna(4) I_Ulna(2) I_Ulna(6); I_Ulna(5) I_Ulna(6) I_Ulna(3)];
 Human_model(incr_solid).c=-Ulna_HumerusJointNode';
@@ -369,9 +328,7 @@ Human_model(incr_solid).ActiveJoint=0;
 Human_model(incr_solid).b=pos_attachment_pt+(k*[0 0 -0.0382]*Mirror)';
 Human_model(incr_solid).calib_k_constraint=s_Radius;
 Human_model(incr_solid).anat_position=Ulna_position_set;
-Human_model(incr_solid).Visual=1;
-Human_model(incr_solid).FunctionalAngle='Elbow flexion(+)/extension(-)' ;
-Human_model(incr_solid).density=1.13; %kg.L-1
+Human_model(incr_solid).Visual=0;
 
 % UlnaRadius_J1
 num_solid=num_solid+1;        % solide num�ro ...
@@ -391,7 +348,6 @@ Human_model(incr_solid).b=(Ulna_RadiusJointNode-Ulna_HumerusJointNode)';
 Human_model(incr_solid).I=zeros(3,3);
 Human_model(incr_solid).c=[0 0 0]';
 Human_model(incr_solid).Visual=0;
-Human_model(incr_solid).FunctionalAngle=[Signe name];
 
 % UlnaRadius_J2
 num_solid=num_solid+1;        % solide num�ro ...
@@ -411,7 +367,6 @@ Human_model(incr_solid).b=[0 0 0]';
 Human_model(incr_solid).I=zeros(3,3);
 Human_model(incr_solid).c=[0 0 0]';
 Human_model(incr_solid).Visual=0;
-Human_model(incr_solid).FunctionalAngle=[Signe name];
 
 % UlnaRadius_J3
 num_solid=num_solid+1;        % solide num�ro ...
@@ -431,7 +386,6 @@ Human_model(incr_solid).b=[0 0 0]';
 Human_model(incr_solid).I=zeros(3,3);
 Human_model(incr_solid).c=[0 0 0]';
 Human_model(incr_solid).Visual=0;
-Human_model(incr_solid).FunctionalAngle=[Signe name];
 
 % UlnaRadius
 num_solid=num_solid+1;        % solide num�ro ...
@@ -450,8 +404,7 @@ Human_model(incr_solid).joint=1;
 Human_model(incr_solid).limit_inf=-pi;
 Human_model(incr_solid).limit_sup=pi;
 Human_model(incr_solid).ActiveJoint=0;
-Human_model(incr_solid).Visual=0;
+Human_model(incr_solid).Visual=1;
 Human_model(incr_solid).ClosedLoop = [Signe 'Radius_UlnaJointNode'];
-Human_model(incr_solid).FunctionalAngle=[Signe name];
 
 end

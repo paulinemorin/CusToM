@@ -28,6 +28,7 @@ function func=CostFunctionLM(q,positions,gamma,hclosedloophandle,zeta,hbutees,we
     % dx
     dX = newweights(:).*(-X_markers(q,pcut,Rcut) + positions);
     
+    
     func = [ dX ; gamma*hclosedloophandle(q) ; zeta*hbutees(q)];
     
 end

@@ -97,8 +97,7 @@ else
     l_sup1=[Human_model.limit_sup]';
 end
 
-weights = ones(length(real_markers),1);
-weights(5:6) = 10;
+weights = AnalysisParameters.IK.weights';
 
 
 h = waitbar(0,['Inverse Kinematics (' filename ')']);

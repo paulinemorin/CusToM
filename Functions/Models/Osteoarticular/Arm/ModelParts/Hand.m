@@ -14,7 +14,7 @@ function [OsteoArticularModel]= Hand(OsteoArticularModel,k,Signe,Mass,Attachment
 %   already existing model (character string)
 %   OUTPUT
 %   - OsteoArticularModel: new osteo-articular model (see the Documentation
-%   for the structure)
+%   for the structure) 
 %________________________________________________________
 %
 % Licence
@@ -28,10 +28,10 @@ list_solid={'Wrist_J1' 'Hand'};
 
 %% Choose right or left arm
 if Signe == 'R'
-    Mirror=[1 0 0; 0 1 0; 0 0 1];
+Mirror=[1 0 0; 0 1 0; 0 0 1];
 else
     if Signe == 'L'
-        Mirror=[1 0 0; 0 1 0; 0 0 -1];
+    Mirror=[1 0 0; 0 1 0; 0 0 -1];
     end
 end
 
@@ -55,15 +55,15 @@ else
     for i=1:numel(OsteoArticularModel)
         for j=1:size(OsteoArticularModel(i).anat_position,1)
             if strcmp(AttachmentPoint,OsteoArticularModel(i).anat_position{j,1})
-                s_mother=i;
-                pos_attachment_pt=OsteoArticularModel(i).anat_position{j,2}+OsteoArticularModel(s_mother).c;
-                test=1;
-                break
+               s_mother=i;
+               pos_attachment_pt=OsteoArticularModel(i).anat_position{j,2}+OsteoArticularModel(s_mother).c;
+               test=1;
+               break
             end
         end
         if i==numel(OsteoArticularModel) && test==0
-            error([AttachmentPoint ' is no existent'])
-        end
+            error([AttachmentPoint ' is no existent'])        
+        end       
     end
     if OsteoArticularModel(s_mother).child == 0      % if the mother don't have any child
         OsteoArticularModel(s_mother).child = eval(['s_' list_solid{1}]);    % the child of this mother is this solid
@@ -86,17 +86,6 @@ cr = 0.071;
 L_forearm = 0.2628;
 k_Pennestri2custom = L_forearm/(cr-dr)*k*Mirror; % Forearm length homotethy
 Pennestri2custom = k_Pennestri2custom*[0 0 1;-1 0 0;0 -1 0];
-
-
-
-
-
-
-% From OpenSim
-osim2antoine = [k (Hand_WristJointNode(2)-Hand_EndNode(2))/0.23559 k];
-Wrist_origin =Mirror*osim2antoine'.*([0.003992 -0.015054 0.002327]');
-
-
 
 %%              Definition of anatomical landmarks
 
@@ -212,12 +201,12 @@ Hand_position_set= {...
 
 %%                     Scaling inertial parameters
 
-%% ["Adjustments to McConville et al. and Young et al. body segment inertial parameters"] R. Dumas
-% ------------------------- Hand ------------------------------------------
-Length_Hand=norm(Hand_WristJointNode-Hand_EndNode);
-[I_Hand]=rgyration2inertia([61 38 56 22 15 20*1i], Mass.Hand_Mass, [0 0 0], Length_Hand, Signe);
+    %% ["Adjustments to McConville et al. and Young et al. body segment inertial parameters"] R. Dumas
+    % ------------------------- Hand ------------------------------------------
+    Length_Hand=norm(Hand_WristJointNode-Hand_EndNode);
+    [I_Hand]=rgyration2inertia([61 38 56 22 15 20*1i], Mass.Hand_Mass, [0 0 0], Length_Hand, Signe);  
 
-%% "Human_model" structure generation
+                %% "Human_model" structure generation
 
 num_solid=0;
 %% Hand
@@ -259,15 +248,4 @@ else
     OsteoArticularModel(incr_solid).limit_inf=-90*pi/180;
     OsteoArticularModel(incr_solid).limit_sup=45*pi/180;
     OsteoArticularModel(incr_solid).FunctionalAngle='Wrist deviation ulnar(-)/radial(+)' ;
-end
-OsteoArticularModel(incr_solid).m=Mass.Hand_Mass;
-OsteoArticularModel(incr_solid).b=[0 0 0]';
-OsteoArticularModel(incr_solid).I=[I_Hand(1) I_Hand(4) I_Hand(5); I_Hand(4) I_Hand(2) I_Hand(6); I_Hand(5) I_Hand(6) I_Hand(3)];
-OsteoArticularModel(incr_solid).c=-Hand_WristJointNode';
-OsteoArticularModel(incr_solid).anat_position=Hand_position_set;
-OsteoArticularModel(incr_solid).Visual=1;
-OsteoArticularModel(incr_solid).visual_file = ['Holzbaur/hand_' Signe '.mat'];
-OsteoArticularModel(incr_solid).L={[Signe 'Hand_WristJointNode'];[Signe 'Hand_EndNode']};
-OsteoArticularModel(incr_solid).density=1.16; %kg.L-1
-
 end

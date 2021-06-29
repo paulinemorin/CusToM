@@ -47,50 +47,57 @@ Nb_frames=size(torques,2);
 idm = logical([Muscles.exist]);
 Nb_muscles=numel(Muscles(idm));
 
-if ~isempty(intersect({BiomechanicalModel.OsteoArticularModel.name},'root0'))
-    BiomechanicalModel.OsteoArticularModel=BiomechanicalModel.OsteoArticularModel(1:end-6);
-end
-
 %% computation of muscle moment arms from joint posture
-% L0=zeros(Nb_muscles,1);
-% Ls=zeros(Nb_muscles,1);
-% for i=1:Nb_muscles
-%     L0(i) = BiomechanicalModel.Muscles(i).l0;
-%     Ls(i) = BiomechanicalModel.Muscles(i).ls;
-% end
+L0=ones(Nb_muscles,1);
+Ls=ones(Nb_muscles,1);
+for i=1:Nb_muscles
+    Muscle_i = BiomechanicalModel.Muscles(i);
+    if ~isempty(Muscle_i.ls) && ~isempty(Muscle_i.l0)
+        L0(i) = Muscle_i.l0;
+        Ls(i) = Muscle_i.ls;
+    end
+end
 Lmt=zeros(Nb_muscles,Nb_frames);
 R=zeros(Nb_q,Nb_muscles,Nb_frames);
 for i=1:Nb_frames % for each frames
-  %  Lmt(idm,i)   =   MuscleLengthComputationNum(BiomechanicalModel,q(:,i)); %dependant of every q (q_complete)
+    Lmt(:,i)   =   MuscleLengthComputationNum(BiomechanicalModel,q(:,i)); %dependant of every q (q_complete)
     R(:,:,i)    =   MomentArmsComputationNum(BiomechanicalModel,q(:,i),0.0001); %depend on reduced set of q (q_red)
 end
 
-idxj=find(sum(R(:,:,1),2)~=0)';
+Lm = Lmt./(Ls./L0+1);
+% Muscle length ratio to optimal length
+Lm_norm = Lm./L0;
+% Muscle velocity
+Vm = gradient(Lm_norm)*freq;
 
-% Lm = Lmt./(Ls./L0+1);
-% % Muscle length ratio to optimal length
-% Lm_norm = Lm./L0;
-% % Muscle velocity
-% Vm = gradient(Lm_norm)*freq;
+[idxj,~]=find(sum(R(:,:,1),2)~=0);
 
 %% Computation of muscle forces (optimization)
 % Optimisation parameters
 Amin = zeros(Nb_muscles,1);
 A0  = 0.5*ones(Nb_muscles,1);
+for i=1:size(idm,2)
+    Muscles(i).f0 = Muscles(i).f0;
+end
 Fmax = [Muscles(idm).f0]';
 Amax = ones(Nb_muscles,1);
 Fopt = zeros(Nb_muscles,Nb_frames);
 Aopt = zeros(size(Fopt));
 % Muscle Forces Matrices computation
-%[Fa,Fp]=AnalysisParameters.Muscles.MuscleModel(Lm,Vm,Fmax);
-
+[Fa,Fp]=AnalysisParameters.Muscles.MuscleModel(Lm,Vm,Fmax);
 
 % Solver parameters
-options1 = optimoptions(@fmincon,'Algorithm','sqp','Display','final','GradObj','off','GradConstr','off','TolFun',1e-6,'MaxIterations',100000,'MaxFunEvals',100000);
-options2 = optimoptions(@fmincon,'Algorithm','sqp','Display','final','GradObj','off','GradConstr','off','TolFun',1e-6,'MaxIterations',1000,'MaxFunEvals',2000000);
+options1 =	optimoptions(@fmincon,'Algorithm','sqp','Display','final','GradObj','off','GradConstr','off','TolFun',1e-4,'TolCon',1e-6,'MaxIterations',100000,'MaxFunEvals',100000);
+options2 =	optimoptions(@fmincon,'Algorithm','sqp','Display','final','GradObj','off','GradConstr','off','TolFun',1e-4,'TolCon',1e-6,'MaxIterations',1000,'MaxFunEvals',2000000);
+
 
 h = waitbar(0,['Forces Computation (' filename ')']);
 
+if (isfield(BiomechanicalModel.OsteoArticularModel,'ClosedLoop') && ~isempty([BiomechanicalModel.OsteoArticularModel.ClosedLoop]))   || (~isempty(KinematicDependancy(BiomechanicalModel.OsteoArticularModel)))
+    % TO BE CHANGED AFTER CALIBRATION
+    k=BiomechanicalModel.GeometricalCalibration.k_calib;
+        
+    [solid_path1,solid_path2,num_solid,num_markers]=Data_ClosedLoop(BiomechanicalModel.OsteoArticularModel);
 
 [solid_path1,solid_path2,num_solid,num_markers]=Data_ClosedLoop(BiomechanicalModel.OsteoArticularModel);
 
@@ -147,20 +154,30 @@ for i=2:Nb_frames % for following frames
 %    [Aopt(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options2, AnalysisParameters.Muscles.CostfunctionOptions, Fa(:,i), Fmax);
     [X(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options1, AnalysisParameters.Muscles.CostfunctionOptions, Fmax, Fmax);
     % Muscular activity
-    Aopt(:,i) = X(1:Nb_muscles,i);
-    A0=X(:,i);
-    Fopt(:,i) = Fmax.*Aopt(:,i);
-%    Fopt(:,i) = Fa(:,i).*Aopt(1:Nb_muscles,i)+Fp(:,i);
+    A0=Aopt(:,1);
+    Fopt(:,1) = Fa(:,1).*Aopt(:,1)+Fp(:,1);
+    waitbar(1/Nb_frames)
     
-    waitbar(i/Nb_frames)
+    for i=2:Nb_frames % for folliwing frames
+        % Moment arms and Active forces
+        Aeq=R(idxj,:,i).*Fa(:,i)';
+        % Joint Torques and Passive force
+        beq=torques(idxj,i) - R(idxj,:,i)*Fp(:,i);
+        % Optimization
+        [Aopt(:,i)] = AnalysisParameters.Muscles.Costfunction(A0, Aeq, beq, Amin, Amax, options2, AnalysisParameters.Muscles.CostfunctionOptions, Fa(:,i), Fmax);        
+        % Muscular activity
+        A0=Aopt(:,i);
+        Fopt(:,i) = Fa(:,i).*Aopt(:,i)+Fp(:,i);
+        waitbar(i/Nb_frames)
+    end
+    
+    % Static optimization results
+    MuscleForcesComputationResults.MuscleActivations(idm,:) = Aopt;
+    MuscleForcesComputationResults.MuscleForces(idm,:) = Fopt;
+    MuscleForcesComputationResults.MuscleLengths= Lmt;
+    MuscleForcesComputationResults.MuscleLeverArm = R;
+    
 end
-
-% Static optimization results
-MuscleForcesComputationResults.MuscleActivations(idm,:) = Aopt(1:Nb_muscles,:);
-MuscleForcesComputationResults.MuscleForces(idm,:) = Fopt;
-MuscleForcesComputationResults.MuscleLengths= Lmt;
-MuscleForcesComputationResults.MuscleLeverArm = R;
-MuscleForcesComputationResults.Lambda = X(Nb_muscles+1:end,:);
 
 close(h)
 
