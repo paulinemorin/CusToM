@@ -1,4 +1,4 @@
-function [OsteoArticularModel]= Upperarm(OsteoArticularModel,k,Signe,Mass,AttachmentPoint)
+function [OsteoArticularModel]= Upperarm(OsteoArticularModel,k,Signe,Mass,AttachmentPoint,varargin)
 % Addition of an upper arm model
 %   This upper arm model contains one solid (humerus), exhibits 3 dof for the
 %   shoulder
