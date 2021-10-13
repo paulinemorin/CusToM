@@ -56,21 +56,21 @@ Prediction=verif_Prediction_Humanmodel(Human_model,Prediction);
 NbPointsPrediction = numel(Prediction);
 
 %% Contact detection
-
-if AnalysisParameters.Prediction.ContactDetection == 0
+ContactDectectionMethod = AnalysisParameters.Prediction.ContactDetection;
+if ContactDectectionMethod == 0
     Contact_detection = ContactDetectionThreshold(filename, AnalysisParameters, Human_model);
-elseif AnalysisParameters.Prediction.ContactDetection == 1
+elseif ContactDectectionMethod == 1
 %     error('Unavailable function')
 %    Contact_detection = ContactDetectionAutomaticThreshold(filename, AnalysisParameters, BiomechanicalModel);
-elseif AnalysisParameters.Prediction.ContactDetection == 2
+elseif ContactDectectionMethod == 2
     Contact_detection = ContactDetectionOne(filename, AnalysisParameters);
-elseif AnalysisParameters.Prediction.ContactDetection == 3
-    [Contact_detection, Num] = ContactDetectionAddMarkers(filename, AnalysisParameters, Human_model);
-elseif AnalysisParameters.Prediction.ContactDetection == 4
+elseif ContactDectectionMethod == 3
+    [Contact_detection, Num, ActivePP] = ContactDetectionAddMarkers(filename, AnalysisParameters, Human_model);
+elseif ContactDectectionMethod == 4
 %     error('Unavailable function')
-elseif AnalysisParameters.Prediction.ContactDetection == 5
+elseif ContactDectectionMethod == 5
 %     error('Unavailable function')
-elseif AnalysisParameters.Prediction.ContactDetection == 6
+elseif ContactDectectionMethod == 6
     Contact_detection = ContactDetectionMatrixGiven(filename, AnalysisParameters);
 end
 
@@ -149,7 +149,7 @@ X0= 1*zeros(3*NbPointsPrediction,1);
 lb=-ones(3*NbPointsPrediction,1);
 lb(2*NbPointsPrediction+1:3*NbPointsPrediction)=0;
 ub=ones(3*NbPointsPrediction,1);
-% if AnalysisParameters.Prediction.ContactDetection == 3
+% if ContactDectectionMethod == 3
 %     load([filename '_T21.mat']); %Matrice de passage du repère monde au repère de la plateforme
 %     lb = reshape(lb,[28,3])';
 %     ub = reshape(ub,[28,3])';
@@ -191,16 +191,16 @@ for i=1:nbframe
         Activ_Contact_Point = sum(Contact_detection(:,i));
         
         if Activ_Contact_Point ~= 0
-            Cpi =( numel(Prediction)/Activ_Contact_Point )* Force_max_TOR(Contact_detection(pred,i),Mass);
+            Cpi = Force_max_TOR(Contact_detection(pred,i),Mass);
         else
             Cpi = 0;
         end
-            Fx(pred,i)=Cpi;
-            Fy(pred,i)=Cpi;
-            Fz(pred,i)=Cpi;
-            Prediction(pred).efforts_max(i,1)=Cpi; %Fx
-            Prediction(pred).efforts_max(i,2)=Cpi; %Fy
-            Prediction(pred).efforts_max(i,3)=Cpi; %Fz
+        Fx(pred,i)=Cpi;
+        Fy(pred,i)=Cpi;
+        Fz(pred,i)=Cpi;
+        Prediction(pred).efforts_max(i,1)=Cpi; %Fx
+        Prediction(pred).efforts_max(i,2)=Cpi; %Fy
+        Prediction(pred).efforts_max(i,3)=Cpi; %Fz
     end
     %Fmax=[Fx(:,i)' Fy(:,i)' Fz(:,i)'];
     Fmax=[];
@@ -273,15 +273,21 @@ for k = 1:(numel(Prediction))
     Afric(4+(k-1)*4,3+(k-1)*3)=-coef_friction*Prediction(k).efforts_max(i,3);
 end
     
-    
-    % Foot orientation Orientation
+    % Foot orientation
+    if isempty(intersect(ContactDectectionMethod,[1 2 4 5 6]))==0
     Theta = zeros(3*numel(Prediction),3*numel(Prediction));
     for k=1:numel(Prediction)
         Theta(3*(k-1)+1:3*(k-1)+3,3*(k-1)+1:3*(k-1)+3)=Human_model(Prediction(k).num_solid).R;
     end
-%     if AnalysisParameters.Prediction.ContactDetection == 3
-%         Afric = inv(T21(1:3,1:3,i))*Afric;
-%     end
+    Afric = Afric*Theta;
+    elseif ContactDectectionMethod ==3
+        load([filename '_T21.mat']);
+        T12 = zeros(length(Prediction)*3);
+        for k=1:numel(Prediction)
+            T12(3*(k-1)+1:3*(k-1)+3,3*(k-1)+1:3*(k-1)+3)=inv(T21(1:3,1:3,i));
+        end
+        Afric = Afric*T12;
+    end
     
     %% Minimizing sum of normalized efforts for each punctual joint while respecting dynamical equations and friction
     X = fmincon(@(X) sum(X.^2),X0,Afric,bfric,A,b,lb,ub,[],options);
@@ -304,11 +310,11 @@ end
     
     %% Calcul des efforts extérieurs tels qu’utilisés par la suite pour la dynamique
     %% Computation of external forces for use with dynamics
-    %external_forces_pred=addForces_Prediction_frame_par_frame(X,external_forces_pred,Prediction,Fmax,i);
-    external_forces_pred=addForces_Prediction_frame_par_frame_COP(X,external_forces_pred,Prediction,Fmax,i);
-    if AnalysisParameters.Prediction.ContactDetection == 3
+    external_forces_pred=addForces_Prediction_frame_par_frame(X,external_forces_pred,Prediction,Fmax,i);
+    if ContactDectectionMethod == 3
         %Coord = num2cell(good_X(:,i));
-        [external_forces_pred(i).Num_Markers] = Num{i}; % Abscisses des marqueurs en contact par rapport au marqueur origine de la structure
+        [external_forces_pred(i).Num_Markers] = Num{i}; % Marqueurs en contact
+        [external_forces_pred(i).ActivePP] = ActivePP{i};
         [external_forces_pred(i).p1] = Human_model(22).p;
         [external_forces_pred(i).p2] = Human_model(28).p;
     end

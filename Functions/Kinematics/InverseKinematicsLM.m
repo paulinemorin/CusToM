@@ -134,7 +134,7 @@ zeta = 20;
 
 waitbar(1/nb_frame) 
 
-optionsLM = optimset('Algorithm','Levenberg-Marquardt','Display','off','MaxIter',4e6,'MaxFunEval',5e6);
+optionsLM = optimset('Algorithm','Levenberg-Marquardt','Display','final','MaxIter',4e6,'MaxFunEval',5e6);
 
 for f = 2:nb_frame
   
