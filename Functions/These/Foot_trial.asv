@@ -1,0 +1,47 @@
+function Foot_trial = Foot_trial(filename,i,s)
+%UNTITLED2 Summary of this function goes here
+%   Detailed explanation goes here
+% i : frame
+% s : solid
+
+load(fullfile(filename,'ExperimentalData.mat'))
+
+if s == 1 % pied gauche 
+    Markers=[{'LHEE'},{'LTOE'},{'LTAR'},{'LTARI'}]';
+else
+     Markers=[{'RHEE'},{'RTOE'},{'RTAR'},{'RTARI'}]';
+end
+
+Name_list={ExperimentalData.MarkerPositions.name}';
+Marker_liste=[];
+
+for k= 1 : numel(Name_list)
+    Marker_liste=[Marker_liste;Name_list{k}];
+end
+
+% Get the numbers of solids on which the forces are applied
+[~,num_m]=intersect(Marker_liste,Markers);
+
+position_HEE=ExperimentalData.MarkerPositions(num_m(1)).position_c3d;
+position_TOE=ExperimentalData.MarkerPositions(num_m(2)).position_c3d;
+position_TAR=ExperimentalData.MarkerPositions(num_m(3)).position_c3d;
+position_TARI=ExperimentalData.MarkerPositions(num_m(4)).position_c3d;
+
+
+y = (position_HEE(i,:)-position_TOE(i,:))/norm(position_HEE(i,:)-position_TOE(i,:));
+
+if s==1 
+    z_temp = (position_TARI(i,:)-position_TAR(i,:))/norm(position_TARI(i,:)-position_TAR(i,:));
+else
+    z_temp = (position_TAR(i,:)-position_TARI(i,:))/norm(position_TARI(i,:)-position_TAR(i,:));
+end
+
+x = cross(y, z_temp);
+z = cross(x, y);
+
+O = mean(position_TAR(i,:),position_TARI(i,:),position_HEE(i,:),position_TOE(i,:));
+
+
+
+end
+
