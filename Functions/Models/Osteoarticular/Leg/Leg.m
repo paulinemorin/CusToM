@@ -31,6 +31,7 @@ function [OsteoArticularModel]= Leg(OsteoArticularModel,k,Signe,Mass,AttachmentP
 %________________________________________________________
 [OsteoArticularModel]= Thigh(OsteoArticularModel,k,Signe,Mass,AttachmentPoint);
 [OsteoArticularModel]= Shank(OsteoArticularModel,k,Signe,Mass,[Signe 'Thigh_KneeJointNode']);
-[OsteoArticularModel]= Foot(OsteoArticularModel,k,Signe,Mass,[Signe 'Shank_AnkleJointNode']);
+[OsteoArticularModel]= Foot2(OsteoArticularModel,k,Signe,Mass,[Signe 'Shank_AnkleJointNode']);
+%[OsteoArticularModel]= Foot(OsteoArticularModel,k,Signe,Mass,[Signe 'Shank_AnkleJointNode']);
 
 end
