@@ -201,7 +201,7 @@ SUJETS=doss;
 nb_s=length(SUJETS);
 
 
-for ii=13:nb_s
+for ii=6:nb_s
     cd(fullfile(cheminglobal,SUJETS{ii}));
     Results = struct();
     load AnalysisParameters
@@ -244,13 +244,11 @@ for ii=13:nb_s
             Results(i+(j-1)*L).filename_type=filename_type;
             Results(i+(j-1)*L).RMSE_Insole = RMSE_COP(X, filename);
             Results(i+(j-1)*L).RMSE_Insole_liste = error_COP_liste(X, filename);
-            [Results(i+(j-1)*L).Contact_liste,Results(i+(j-1)*L).Fz_Insole_liste] = Fz_COP(X, filename);
+            Results(i+(j-1)*L).Fz_Insole_liste = Fz_COP(X, filename);
             % Results(i++(j-1)*15).RMSE_Predi = RMSE_Pred(X, filename);
             %Results(i).RMSE_Pied_Frame = RMSE_COP_Pied(X, filename);
             Results(i+(j-1)*L).RMSE_Insole_x = Results(i+(j-1)*L).RMSE_Insole(1);
             Results(i+(j-1)*L).RMSE_Insole_y = Results(i+(j-1)*L).RMSE_Insole(2);
-            load(fullfile(filename,'InsoleData.mat'))
-            %Results(i+(j-1)*L).Contact = InsoleData.Contact;
             %         [ExternalForcesComputationResults] = ExternalForcesPredictionCOP(filename, AnalysisParameters, BiomechanicalModel, ModelParameters);
             %         SaveDataExternalForces(filename,ExternalForcesComputationResults);
             %         [RMSE_Pred, RMSE_Pred_COP] = RMSE_PostProcess(filename);

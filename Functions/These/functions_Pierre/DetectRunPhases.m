@@ -45,6 +45,7 @@ Event=event(z);
 %% Compatibilité dynamique inverse
 %phases d'envol
 n = 15;
+n = 0;
 if Event(1).frame-n <=0
     deb=1;
 else

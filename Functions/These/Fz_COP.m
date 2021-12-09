@@ -1,5 +1,5 @@
 
-function Fz = Fz_COP(X, filename)
+function [Contact_liste, Fz] = Fz_COP(X, filename)
 %UNTITLED5 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -69,11 +69,20 @@ error_R(:,1)=(COP_Insole.(Solids{2})(1,suivi((2-1)*length(suivi_L)+1:end-(2-2)*l
 error_R(:,2)=(COP_Insole.(Solids{2})(2,suivi((2-1)*length(suivi_L)+1:end-(2-2)*length(suivi_R)))'-COP_Xp.(Solids{2})(suivi((2-1)*length(suivi_L)+1:end-(2-2)*length(suivi_R)),2));
 
 load(fullfile(filename,'InsoleData.mat'))
+InsoleData.Contact=Contact;
+save([filename '/InsoleData'],'InsoleData');
+
 
 Force_LF=InsoleData.data(suivi((1-1)*length(suivi_L)+1:end-(2-1)*length(suivi_R)),21);
 Force_RF=InsoleData.data(suivi((2-1)*length(suivi_L)+1:end-(2-2)*length(suivi_R)),43);
 
 Fz=[Force_LF;Force_RF];
+
+
+Contact_LF=Contact(1,suivi((1-1)*length(suivi_L)+1:end-(2-1)*length(suivi_R)))';
+Contact_RF=Contact(2,suivi((2-1)*length(suivi_L)+1:end-(2-2)*length(suivi_R)))';
+
+Contact_liste=[Contact_LF;Contact_RF];
 % 
 % figure(5)
 % hold on

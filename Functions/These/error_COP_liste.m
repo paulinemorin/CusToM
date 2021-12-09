@@ -69,6 +69,8 @@ error_R(:,1)=(COP_Insole.(Solids{2})(1,suivi((2-1)*length(suivi_L)+1:end-(2-2)*l
 error_R(:,2)=(COP_Insole.(Solids{2})(2,suivi((2-1)*length(suivi_L)+1:end-(2-2)*length(suivi_R)))'-COP_Xp.(Solids{2})(suivi((2-1)*length(suivi_L)+1:end-(2-2)*length(suivi_R)),2));
 
 load(fullfile(filename,'InsoleData.mat'))
+InsoleData.Contact=Contact;
+save([filename '/InsoleData'],'InsoleData');
 
 Force_LF=InsoleData.data(suivi((1-1)*length(suivi_L)+1:end-(2-1)*length(suivi_R)),21);
 Force_RF=InsoleData.data(suivi((2-1)*length(suivi_L)+1:end-(2-2)*length(suivi_R)),43);

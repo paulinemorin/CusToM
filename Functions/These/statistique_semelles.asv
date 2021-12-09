@@ -39,10 +39,10 @@ end
 
 T = Precision_Semelles;
 %T = struct2table(Precision_Semelles);
-Calib_type_order = {'ChangmntDirection','Run','Walk'};
-T.filename_calib_type = categorical(T.filename_calib_type,Calib_type_order);
-T.filename_type = categorical(T.filename_type);
-T.filename = categorical(T.filename);
+Calib_type_order = {'ChangmntDirection','1','Run','2','Walk'};
+T.filename_calib_type = categorical({T.filename_calib_type},Calib_type_order,'s');
+T.filename_type = categorical(T.filename_type,'s');
+T.filename = categorical(T.filename,'s');
 
 % figure
 % boxchart(T.filename_type,T.RMSE_Insole_x,'GroupByColor',T.filename_calib_type)
@@ -57,7 +57,7 @@ figure(1)
 set(gca,'color','w')
 set(gcf,'color','w')
 %group = T.filename_calib_type.*T.filename_type;
-grouptext = {'Sidecut Maneuver','Run','Walk'};
+grouptext = {'Sidecut Maneuver','1','Run','2','Walk'};
 group = T.filename_calib_type;
 Calib_type_order = {'Sidecut Maneuver','','','','','Run','','','','','Walk','','','','','Sidecut Maneuver','','','','','Run','','','','','Walk','','','','','Sidecut Maneuver','','','','','Run','','','','','Walk','','','',''};
 
@@ -69,14 +69,14 @@ boxchart(group,T.RMSE_Insole_x,'GroupByColor',T.filename_type)
 %boxchart(T.filename_calib,T.RMSE_Insole_x)
 ylabel('RMSE AM (m)')
 xlabel('Calibration Trial Type')
-xticklabels(grouptext)
+%xticklabels(grouptext)
 legend('Sidecut Maneuver','Run','Walk')
-% axe=gca;
-% Unique_name_groupe=unique(group,'stable');
-% x.Xaxis.Categories={Unique_name_groupe(1),'1',Unique_name_groupe(2),'2',Unique_name_groupe(3)};
-% arrayfun(@(x)xline(x,'r-','LineWidth',1.5),categorical({'1','2'}))
-% ax.XTickLabel([2,4]) = {''};
-% 
+axe=gca;
+Unique_name_groupe=unique(group,'stable');
+x.Xaxis.Categories={Unique_name_groupe(1),'1',Unique_name_groupe(2),'2',Unique_name_groupe(3)};
+arrayfun(@(x)xline(x,'r-','LineWidth',1.5),categorical({'1','2'}))
+ax.XTickLabel([2,4]) = {''};
+
 
 figure(2)
 set(gca,'color','w')
@@ -153,7 +153,4 @@ Precision_force = struct2table(Precision_force);
 
 %writetable(Precision_force,'Precision_force_6.xlsx')
 
-figure(3)
-set(gca,'color','w')
-set(gcf,'color','w')
 
