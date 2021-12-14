@@ -35,8 +35,69 @@ end
 
 %writetable(Precision_Semelles,'Precision_Semelles_4.xlsx')
 %writetable(Precision_Semelles_reduit,'Precision_Semelles_calib_par_cat.xlsx')
+%% Claire
+Calib_type_order = {'ChangmntDirection','1','Run','2','Walk'};
+T.filename_calib_type = categorical(T.filename_calib_type,Calib_type_order);
+T.filename_type = categorical(T.filename_type);
+T.filename = categorical(T.filename);
 
 
+
+
+
+% figure
+% boxchart(T.filename_type,T.RMSE_Insole_x,'GroupByColor',T.filename_calib_type)
+% title('Erreur sur la position du centre de pression')
+% %boxchart(T.filename_calib,T.RMSE_Insole_x)
+% ylabel('RMSE selon l axe x')
+% xlabel('Type de l essai pour la calibration')
+% legend
+
+
+
+
+
+
+figure(3)
+set(gca,'color','w')
+set(gcf,'color','w')
+%group = T.filename_calib_type.*T.filename_type;
+grouptext = {'Sidecut Maneuver','1','Run','2','Walk'};
+group =T.filename_calib_type;
+
+
+
+Calib_type_order = {'Sidecut Maneuver','','','','','Run','','','','','Walk','','','','','Sidecut Maneuver','','','','','Run','','','','','Walk','','','','','Sidecut Maneuver','','','','','Run','','','','','Walk','','','',''};
+
+
+
+
+
+boxchart(group,T.RMSE_Insole_x,'GroupByColor',T.filename_type)
+
+
+
+
+
+%
+%boxchart(group,T.RMSE_Insole_x,'GroupByColor',T.filename_calib_type)
+%title('Erreur sur la position du centre de pression')
+%boxchart(T.filename_calib,T.RMSE_Insole_x)
+ylabel('RMSE AM (m)')
+xlabel('Calibration Trial Type')
+xticklabels(grouptext)
+axe=gca;
+% Unique_name_groupe=unique(group,'stable');
+% x.Xaxis.Categories={Unique_name_groupe(1),'1',Unique_name_groupe(2),'2',Unique_name_groupe(3)};
+arrayfun(@(x)xline(x,'r-','LineWidth',1.5),categorical({'1','2 '}))
+axe.XTickLabel([2,4]) = {''};
+%
+
+
+
+legend('Sidecut Maneuver','Run','Walk')
+
+%% debut
 T = Precision_Semelles;
 %T = struct2table(Precision_Semelles);
 Calib_type_order = {'ChangmntDirection','Run','Walk'};
@@ -63,7 +124,7 @@ Calib_type_order = {'Sidecut Maneuver','','','','','Run','','','','','Walk','','
 
 boxchart(group,T.RMSE_Insole_x,'GroupByColor',T.filename_type)
 
-%
+
 %boxchart(group,T.RMSE_Insole_x,'GroupByColor',T.filename_calib_type)
 %title('Erreur sur la position du centre de pression')
 %boxchart(T.filename_calib,T.RMSE_Insole_x)
@@ -71,6 +132,44 @@ ylabel('RMSE AM (m)')
 xlabel('Calibration Trial Type')
 xticklabels(grouptext)
 legend('Sidecut Maneuver','Run','Walk')
+
+
+figure(2)
+set(gca,'color','w')
+set(gcf,'color','w')
+
+Y1 = NaN(size(T,1),3);
+Y2=NaN(size(T,1),3);
+Y3=NaN(size(T,1),3);
+for i=1:size(T,1)
+    if T.filename_type(i) =={'ChangmntDirection'}
+        j=1;
+    elseif T.filename_type(i) =={'Run'}
+        j=2;
+    elseif T.filename_type(i) =={'Walk'}
+        j=3;
+    end
+    if T.filename_calib_type(i) =={'ChangmntDirection'}
+        Y1(i,j) = T.RMSE_Insole_x(i);
+    elseif T.filename_calib_type(i) =={'Run'}
+        Y2(i,j)=T.RMSE_Insole_x(i);
+    elseif T.filename_calib_type(i) =={'Walk'}
+        Y3(i,j)=T.RMSE_Insole_x(i);
+    end
+end
+color={[0.171 0.195 0.201],[0.244 0.212 0.212],[0.204 0.190 0.159]};
+%color={'#601A4A','#EE442F','#63ACBE'};
+boxplot_custom(Y1,Y2,Y3,grouptext,'mode',3,'list_legends',grouptext,'outlier_multiplier',Inf,'fillcolor',color)
+%boxchart(group,T.RMSE_Insole_x,'GroupByColor',T.filename_type) 'fillcolor','b'
+
+
+%boxchart(group,T.RMSE_Insole_x,'GroupByColor',T.filename_calib_type)
+%title('Erreur sur la position du centre de pression')
+%boxchart(T.filename_calib,T.RMSE_Insole_x)
+ylabel('RMSE AM (m)')
+xlabel('Calibration Trial Type')
+xticklabels(grouptext)
+%legend('Sidecut Maneuver','Run','Walk')
 % axe=gca;
 % Unique_name_groupe=unique(group,'stable');
 % x.Xaxis.Categories={Unique_name_groupe(1),'1',Unique_name_groupe(2),'2',Unique_name_groupe(3)};
@@ -153,7 +252,51 @@ Precision_force = struct2table(Precision_force);
 
 %writetable(Precision_force,'Precision_force_6.xlsx')
 
-figure(3)
+Y=NaN(length(Fz_round),length(unique(Fz_round)));
+X=NaN(length(Fz_round),length(unique(Fz_round)));
+
+for i=1:length(Fz_round)
+    j=find(Fz_round(i)==unique(Fz_round));
+    Y(i,j)=RMSE_y(i);
+    X(i,j)=RMSE_x(i);
+end
+
+Cate_liste=unique(Fz_round);
+%Cate={num2str(unique(Fz_round))};
+Cate=cell(1,length(unique(Fz_round)));
+for j=1:length(unique(Fz_round))
+    Cate{1,j}=num2str(Cate_liste(j));
+end
+figure(6)
 set(gca,'color','w')
 set(gcf,'color','w')
+boxplot_custom(Y,Cate,'outlier_multiplier',Inf)
+ylabel('Error AP (m)')
+xlabel('Vertical force (N)')
+
+figure(7)
+set(gca,'color','w')
+set(gcf,'color','w')
+boxplot_custom(X,Cate,'outlier_multiplier',Inf)
+ylabel('Error ML (m)')
+xlabel('Vertical force (N)')
+
+
+
+
+
+% figure(5)
+% set(gca,'color','w')
+% set(gcf,'color','w')
+% Precision_force.Fz_round = categorical(Precision_force.Fz_round);
+% group =Precision_force.Fz_round ;
+% A=boxchart(group,Precision_force.RMSE_x,'GroupByColor',Precision_force.Fz_round);
+% 
+% %boxchart(group,T.RMSE_Insole_y,'GroupByColor',T.filename_calib_type)
+% %title('Erreur sur la position du centre de pression')
+% %boxchart(T.filename_calib,T.RMSE_Insole_x)
+% % ylabel('RMSE AP (m)')
+% % xlabel('Calibration Trial Type')
+% % legend('Sidecut Maneuver','Run','Walk')
+% % xticklabels(grouptext)
 
