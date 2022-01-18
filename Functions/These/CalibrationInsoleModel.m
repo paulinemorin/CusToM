@@ -331,7 +331,7 @@ figure
 hold on
 set(gca,'color','w')
 set(gcf,'color','w')
-title_liste={'Pied gauche','Pied droit'};
+title_liste={'Left Foot','Right Foot'};
 
 for ii=[1,2]
     subplot(1,2,ii)
@@ -351,6 +351,7 @@ for ii=[1,2]
     
 end
 
+legend('CoP from insole','CoP from plateform')
 
 figure
 hold on
