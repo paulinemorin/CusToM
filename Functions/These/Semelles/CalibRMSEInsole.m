@@ -112,34 +112,34 @@ end
 %     
 % end
 % 
-% figure
-% hold on
-% set(gca,'color','w')
-% set(gcf,'color','w')
-% title_liste={'Left Foot','Right Foot'};
-% 
-% for ii=[1,2]
-%     subplot(1,2,ii)
-%     COP_Xp.(Solids{ii})(COP_Xp.(Solids{ii})==0) = NaN;
-%     x=CoP_Pos_G((ii-1)*3+2,suivi((ii-1)*length(suivi_L)+1:end-(2-ii)*length(suivi_R)));
-%     y=CoP_Pos_G((ii-1)*3+1,suivi((ii-1)*length(suivi_L)+1:end-(2-ii)*length(suivi_R)));
-%     plot(y,x,'*')
-%     hold on
-%     x=COP_Xp.(Solids{ii})(suivi((ii-1)*length(suivi_L)+1:end-(2-ii)*length(suivi_R)),2);
-%     y=COP_Xp.(Solids{ii})(suivi((ii-1)*length(suivi_L)+1:end-(2-ii)*length(suivi_R)),1);
-%     plot(y,x,'*')
-%         axis([nanmean(y)-0.5*taille(2) nanmean(y)+0.5*taille(2) nanmean(x)-0.5*taille(1) nanmean(x)+0.5*taille(1)])
-%     title(title_liste(ii))
-%     %axis([-0.5*taille(2) 0.5*taille(2) -0.5*taille(1) 0.5*taille(1)])
-%     xlabel({'Medio-lateral position (m)'})
-%     ylabel({'Antero-posterior position (m)'})
-%     
-% %     ylabel({'Medio-lateral position','longeur semelle (m)'})
-% %     xlabel({'x dans le repère global','largeur semelle (m)'})
-%     
-% end
-% 
-% legend('CoP from insole','CoP from plateform')
+figure
+hold on
+set(gca,'color','w')
+set(gcf,'color','w')
+title_liste={'Left Foot','Right Foot'};
+
+for ii=[1,2]
+    subplot(1,2,ii)
+    COP_Xp.(Solids{ii})(COP_Xp.(Solids{ii})==0) = NaN;
+    x=CoP_Pos_G((ii-1)*3+2,suivi((ii-1)*length(suivi_L)+1:end-(2-ii)*length(suivi_R)));
+    y=CoP_Pos_G((ii-1)*3+1,suivi((ii-1)*length(suivi_L)+1:end-(2-ii)*length(suivi_R)));
+    plot(y,x,'*')
+    hold on
+    x=COP_Xp.(Solids{ii})(suivi((ii-1)*length(suivi_L)+1:end-(2-ii)*length(suivi_R)),2);
+    y=COP_Xp.(Solids{ii})(suivi((ii-1)*length(suivi_L)+1:end-(2-ii)*length(suivi_R)),1);
+    plot(y,x,'*')
+        axis([nanmean(y)-0.5*taille(2) nanmean(y)+0.5*taille(2) nanmean(x)-0.5*taille(1) nanmean(x)+0.5*taille(1)])
+    title(title_liste(ii))
+    %axis([-0.5*taille(2) 0.5*taille(2) -0.5*taille(1) 0.5*taille(1)])
+    xlabel({'Medio-lateral position (m)'})
+    ylabel({'Antero-posterior position (m)'})
+    
+%     ylabel({'Medio-lateral position','longeur semelle (m)'})
+%     xlabel({'x dans le repère global','largeur semelle (m)'})
+    
+end
+
+legend('CoP from insole','CoP from plateform')
 
 
 end
