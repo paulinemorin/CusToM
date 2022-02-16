@@ -1,28 +1,25 @@
-function Cpi = Force_max_TOR(pz,vp,Mass, zcrit, vcrit)
+function Cpi = Force_max_TOR(contact_boolean,Mass)
 % Maximal force available at a contact point for the prediction of the ground reaction forces
-%   if the vertical position and the normal of the velocity of the point is
-%   lower than thresholds, the maximal force available is equal to 40% of
+%   if the point has been detected as in contact,
+%   the maximal force available is equal to 40% of
 %   the subject weight
 %
 %   INPUT
-%   - pz: vectical position of the point
-%   - vp: norm of the velocity of the point
+%   - contact_boolean: activation of the considered contact point
 %   - Mass: subject mass
-%   - zcrit: vectical position threshold
-%   - vcrit: norm of the velocity threshold
 %________________________________________________________
 %
 % Licence
 % Toolbox distributed under GPL 3.0 Licence
 %________________________________________________________
 %
-% Authors : Antoine Muller, Charles Pontonnier, Pierre Puchaud and
-% Georges Dumont
+% Authors : Antoine Muller, Charles Pontonnier, Pierre Puchaud, Pauline
+% Morin and Georges Dumont 
 %________________________________________________________
 
 prop=0.4;
 
-if pz<zcrit && abs(vp)<vcrit 
+if contact_boolean
     Cpi=prop* Mass*9.81; 
 else
     Cpi=0;
