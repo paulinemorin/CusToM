@@ -40,7 +40,8 @@ parfor i = 1:numel(AnalysisParameters.filename)
         if  isempty(AnalysisParameters.Prediction.ContactPoint)
             error("You need to choose contact points in External Forces Prediction options. Operation aborted.");
         end
-        [ExternalForcesComputationResults] = ExternalForcesPrediction(filename, AnalysisParameters, BiomechanicalModel, ModelParameters);
+        [ExternalForcesComputationResults] = ExternalForcesPredictionMinimizationActivations(filename, AnalysisParameters, BiomechanicalModel, ModelParameters);
+        %[ExternalForcesComputationResults] = ExternalForcesPrediction(filename, AnalysisParameters, BiomechanicalModel, ModelParameters);
     end
     SaveDataExternalForces(filename,ExternalForcesComputationResults);
 end
